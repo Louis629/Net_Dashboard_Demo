@@ -1,0 +1,221 @@
+<!-- templates/telecom_decommission.html -->
+<div class="space-y-6">
+    <div id="cucm-decommission-module" class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-6">
+        <!-- Banner & Header -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between border-b border-slate-700 pb-4 gap-4">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        Phase 4: Dial-Plan &amp; Decommissioning
+                    </span>
+                    <span class="bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        Smart License Reclamation
+                    </span>
+                    <span class="px-2 py-0.5 text-xs font-bold text-red-400 bg-red-950/60 border border-red-800 rounded">Admin Only</span>
+                    <div class="inline-flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1">
+                        <span class="text-xs text-slate-400">Webex Token:</span>
+                        <span class="webex-token-badge text-xs px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">Not Set</span>
+                        <button type="button" onclick="promptWebexToken()" class="text-xs text-amber-400 hover:text-amber-300 font-semibold underline ml-1">Set (12h)</button>
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2.5 mt-2">
+                    <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    CUCM Coexistence Dial-Plan &amp; License Hand-Off
+                </h2>
+                <p class="text-xs text-slate-400 mt-1 max-w-3xl">
+                    Prevent split-brain routing blackholes during coexistence by creating CUCM Translation Patterns pointing migrated extensions to the Local Gateway (CUBE/LGW), disassociate lines, and decommission physical devices from CUCM 12.5(1) to release Cisco Smart Software Licenses (UCL / CUWL).
+                </p>
+            </div>
+
+            <!-- Cluster Selector -->
+            <div class="flex items-center gap-3">
+                <label class="text-xs font-semibold text-slate-400">Cluster:</label>
+                <select id="cucmDecomCluster" onchange="handleCucmDecomClusterChange(this.value)" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    <option value="PRIMARY">PRIMARY ({{ primary_cucm_host if primary_cucm_host else 'Mainland 12.5' }})</option>
+                    <option value="HAWAII">HAWAII ({{ hawaii_cucm_host if hawaii_cucm_host else 'Hawaii 11.5' }})</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Coexistence Flow Architecture Visual -->
+        <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-4">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Hybrid Dial-Plan &amp; Cutover Order</span>
+            <div class="flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2 font-mono">
+                <span class="bg-rose-950/40 text-rose-300 px-3 py-1.5 rounded border border-rose-500/40 font-semibold">1. Delete Device(s) &amp; DN</span>
+                <span class="text-amber-400 font-bold">&rarr;</span>
+                <span class="bg-cyan-950/40 text-cyan-300 px-3 py-1.5 rounded border border-cyan-500/40 font-semibold">2. Inject Route Pattern</span>
+                <span class="text-amber-400 font-bold">&rarr;</span>
+                <span class="bg-slate-800 px-3 py-1.5 rounded border border-slate-700">Gateway / Route List (CUBE/LGW)</span>
+                <span class="text-cyan-400 font-bold">&rarr;</span>
+                <span class="bg-emerald-950/40 text-emerald-300 px-3 py-1.5 rounded border border-emerald-500/40 font-semibold">Webex Calling Cloud</span>
+            </div>
+        </div>
+
+        <!-- Dual Action Grid (Step 1: Decommission Devices & Free DN -> Step 2: Inject Route Pattern) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Action 1: Device Decommission & License Release (Step 1) -->
+            <div class="bg-slate-900/70 border border-slate-700/80 rounded-xl p-5 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
+                        Device Decommission &amp; License Release
+                    </h3>
+                    <span class="text-[11px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/30">Step 1</span>
+                </div>
+                <p class="text-xs text-slate-400">
+                    Removes physical phone(s) (SEP&lt;MAC&gt;) and/or softphone/Jabber devices (CSF/TCT/BOT/TAB or named devices like <span class="font-mono text-slate-300">ThomasJabber</span>) from CUCM first, deletes the unassigned DN, releases Smart Licenses, and then creates the Step 2 Route Pattern.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Device MAC / Name(s) <span class="text-red-400">*</span></label>
+                        <input type="text" id="decomInputMac" placeholder="SEP001122334455 or BOTSTTM, ThomasJabber" oninput="inspectCucmDeviceDebounced(this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 font-mono" />
+                        <span id="decomDeviceFeedback" class="text-[10px] text-slate-400 mt-1 block">Enter one or comma-separated MAC/device names, or click Find by Ext</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-semibold text-slate-300">Extension</label>
+                            <button type="button" onclick="findCucmDevicesByExtension()" id="btnFindDevicesByExt" class="text-[10px] text-rose-300 hover:text-rose-200 underline font-semibold">
+                                Find Devices by Ext
+                            </button>
+                        </div>
+                        <input type="text" id="decomInputExt" placeholder="Auto-resolved or 801682" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 font-mono" />
+                        <span class="text-[10px] text-slate-500 mt-1 block">Finds all CUCM phones/BOT/Jabber sharing this DN</span>
+                    </div>
+                    <div class="sm:col-span-2 space-y-1.5 pt-1">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="decomCheckCreateTp" checked class="w-4 h-4 text-rose-600 bg-slate-800 border-slate-600 rounded focus:ring-0" />
+                            <span class="text-xs text-slate-300">Also create Route Pattern for hybrid routing (uses Step 2 Partition &amp; Gateway)</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer block">
+                            <input type="checkbox" id="decomCheckDeleteDn" checked class="w-4 h-4 text-rose-600 bg-slate-800 border-slate-600 rounded focus:ring-0" />
+                            <span class="text-xs text-slate-300">Delete Directory Number from numplan once all devices are removed</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="decomCheckDryRun" checked class="w-4 h-4 text-rose-600 bg-slate-800 border-slate-600 rounded focus:ring-0" />
+                        <span class="text-xs text-slate-300">Dry Run</span>
+                    </label>
+                    <button type="button" onclick="submitCucmDecommission()" id="btnSubmitDecom" class="bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
+                        Decommission Device(s)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action 2: Route Pattern Quick Inject (Step 2) -->
+            <div class="bg-slate-900/70 border border-slate-700/80 rounded-xl p-5 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                        Hybrid Route Pattern Injection
+                    </h3>
+                    <span class="text-[11px] font-semibold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30">Step 2</span>
+                </div>
+                <p class="text-xs text-slate-400">
+                    Injects a Route Pattern pointing the migrated extension to the Gateway or Route List. (CUCM requires all old devices &amp; the DN in this Partition to be removed in Step 1 first.)
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Extension / DN <span class="text-red-400">*</span></label>
+                        <input type="text" id="tpInputExt" placeholder="4199" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono" />
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-semibold text-slate-300">Route Partition <span class="text-red-400">*</span></label>
+                            <div class="flex items-center gap-2">
+                                <span id="cucmPtCountBadge" class="text-[10px] text-cyan-400 font-mono"></span>
+                                <button type="button" onclick="refreshCucmDialplanOptions()" title="Refresh partitions &amp; gateways from CallManager" class="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+                                    <span class="text-xs">⟳</span> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        <select id="tpSelectPartition" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                            <option value="">Loading partitions from CallManager...</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-semibold text-slate-300">Gateway / Route List <span class="text-red-400">*</span></label>
+                            <span id="cucmGwCountBadge" class="text-[10px] text-cyan-400 font-mono"></span>
+                        </div>
+                        <select id="tpSelectGateway" onchange="handleGatewayDropdownChange(this.value)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono">
+                            <option value="">Loading gateways &amp; route lists from CallManager...</option>
+                        </select>
+                        <div id="customGatewayInputContainer" class="hidden mt-2 p-2.5 bg-slate-800/90 border border-amber-500/50 rounded-lg space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-semibold text-amber-300 flex items-center gap-1.5">
+                                    <span>✏️</span> Custom Destination Name (Gateway, Route List, or SIP Trunk)
+                                </span>
+                                <button type="button" onclick="cancelCustomGatewayInput()" class="text-[10px] text-slate-400 hover:text-white underline">Back to dropdown</button>
+                            </div>
+                            <input type="text" id="tpInputCustomGateway" placeholder="e.g. RL_WebexCalling_LGW or CUBE-SIP-TRUNK" class="w-full bg-slate-900 border border-amber-500/60 rounded px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono" />
+                            <div class="flex items-center gap-4 pt-1">
+                                <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                                    <input type="radio" name="customGwType" value="route_list" checked class="text-amber-500 focus:ring-0" />
+                                    <span>Route List (<code class="text-[10px] text-amber-300">&lt;routeListName&gt;</code>)</span>
+                                </label>
+                                <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                                    <input type="radio" name="customGwType" value="gateway" class="text-amber-500 focus:ring-0" />
+                                    <span>Gateway / Trunk (<code class="text-[10px] text-amber-300">&lt;gatewayName&gt;</code>)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-slate-400 mt-1 block">Routes extension directly through the selected CUBE Trunk, Gateway, or Route List to Webex Calling</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="tpCheckDryRun" checked class="w-4 h-4 text-cyan-600 bg-slate-800 border-slate-600 rounded focus:ring-0" />
+                        <span class="text-xs text-slate-300">Dry Run</span>
+                    </label>
+                    <button type="button" onclick="submitTranslationPattern()" id="btnSubmitTp" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
+                        Inject Route Pattern
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="border border-slate-700/80 rounded-xl overflow-hidden shadow">
+            <div class="bg-slate-900/90 px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">CUCM Hand-Off &amp; Decommissioning Log</span>
+                <span id="decomTableCount" class="text-xs text-slate-400">0 operations</span>
+            </div>
+            <div class="overflow-x-auto max-h-72">
+                <table class="min-w-full divide-y divide-slate-800 text-left text-xs">
+                    <thead class="bg-slate-900/60 text-slate-400 font-semibold sticky top-0">
+                        <tr>
+                            <th class="px-4 py-2.5">Device Name</th>
+                            <th class="px-4 py-2.5">Model</th>
+                            <th class="px-4 py-2.5">Extension</th>
+                            <th class="px-4 py-2.5">Dial-Plan Pattern</th>
+                            <th class="px-4 py-2.5">Device Deletion</th>
+                            <th class="px-4 py-2.5">License Reclaimed</th>
+                            <th class="px-4 py-2.5">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="decomResultsBody" class="divide-y divide-slate-800 text-slate-300 font-normal">
+                        <tr>
+                            <td colspan="7" class="px-4 py-6 text-center text-slate-500 italic">
+                                No decommission actions executed yet. Enter extension or device MAC above and click Execute.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    if (typeof loadCucmDialplanOptions === 'function') {
+        loadCucmDialplanOptions();
+    }
+</script>

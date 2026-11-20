@@ -1,0 +1,29 @@
+{
+  "id": "8021x_duplicate_identity_collision",
+  "category": "8021X",
+  "name": "Duplicate Identity / Ambiguous AD Accounts",
+  "severity": "High",
+  "match_mode": "ALL",
+  "conditions": [
+    {
+      "field": "ad_account_match_count",
+      "operator": "greater_than",
+      "value": 1
+    }
+  ],
+  "diagnosis": "Multiple Active Directory accounts share the same UPN or Email address. Cisco ISE cannot uniquely identify the user during 802.1X authentication.",
+  "confidence": 100,
+  "recommended_actions": [
+    "Identify conflicting accounts in Active Directory.",
+    "Verify if a secondary account (e.g. -admin, contractor, or test account) shares the same UPN/email.",
+    "Remove or update the duplicate 'mail' or 'userPrincipalName' attribute on the non-primary account.",
+    "Flush ISE cache / Retry 802.1X authentication."
+  ],
+  "auto_actions": [
+    "show_conflicting_accounts_list",
+    "show_servicenow_export_button"
+  ],
+  "kb_id": "KB00108",
+  "escalation_team": "Active Directory / Identity Team",
+  "recommended_role": "HelpdeskTech"
+}

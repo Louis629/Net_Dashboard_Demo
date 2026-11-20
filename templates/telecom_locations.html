@@ -1,0 +1,227 @@
+<!-- templates/telecom_locations.html -->
+<div class="space-y-6">
+    <div id="meraki-locations-module" class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-6">
+        <!-- Banner & Overview -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between border-b border-slate-700 pb-4 gap-4">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <span class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        Phase 1: Location Setup & DIDs
+                    </span>
+                    <span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        Meraki-Powered
+                    </span>
+                    <span class="px-2 py-0.5 text-xs font-bold text-red-400 bg-red-950/60 border border-red-800 rounded">Admin Only</span>
+                    <div class="inline-flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1">
+                        <span class="text-xs text-slate-400">Webex Token:</span>
+                        <span class="webex-token-badge text-xs px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">Not Set</span>
+                        <button type="button" onclick="promptWebexToken()" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold underline ml-1">Set (12h)</button>
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2.5 mt-2">
+                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Meraki Location Sync & DID Provisioning
+                </h2>
+                <p class="text-xs text-slate-400 mt-1 max-w-3xl">
+                    Extract physical site addresses from Cisco Meraki MX/Z4 appliances, validate against E911 dispatch requirements, preview parity against Webex Control Hub, and provision calling locations and external PSTN DIDs in E.164.
+                </p>
+            </div>
+
+            <!-- Toolbar Actions -->
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="previewMerakiLocations()" id="btnPreviewMerakiLocs" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs px-4 py-2.5 rounded-lg transition shadow-md flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Fetch Meraki Locations
+                </button>
+            </div>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <div id="locMetricsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 hidden">
+            <div class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 shadow">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Meraki Sites</span>
+                <div id="locMetricTotal" class="text-2xl font-bold text-white mt-1">0</div>
+                <span class="text-xs text-slate-500">MX / Z4 Networks</span>
+            </div>
+            <div class="bg-slate-900/80 border border-emerald-500/30 rounded-xl p-4 shadow">
+                <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Exists in Webex</span>
+                <div id="locMetricExisting" class="text-2xl font-bold text-emerald-400 mt-1">0</div>
+                <span class="text-xs text-slate-500">Parity Confirmed</span>
+            </div>
+            <div class="bg-slate-900/80 border border-cyan-500/30 rounded-xl p-4 shadow">
+                <span class="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Ready to Provision</span>
+                <div id="locMetricReady" class="text-2xl font-bold text-cyan-400 mt-1">0</div>
+                <span class="text-xs text-slate-500">New Control Hub Sites</span>
+            </div>
+            <div class="bg-slate-900/80 border border-rose-500/30 rounded-xl p-4 shadow">
+                <span class="text-xs font-semibold text-rose-400 uppercase tracking-wider">Address Incomplete</span>
+                <div id="locMetricInvalid" class="text-2xl font-bold text-rose-400 mt-1">0</div>
+                <span class="text-xs text-slate-500">Missing Street/City/ZIP</span>
+            </div>
+            <div class="bg-slate-900/80 border border-indigo-500/30 rounded-xl p-4 shadow">
+                <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">RedSky E911</span>
+                <div id="locMetricRedsky" class="text-2xl font-bold text-indigo-400 mt-1">0</div>
+                <span class="text-xs text-slate-500">MSAG Valid / Ready</span>
+            </div>
+        </div>
+
+        <!-- Telephony Parameters & Sync Actions -->
+        <div id="locControlsContainer" class="bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 hidden">
+            <div class="flex flex-wrap items-center gap-4">
+                <div>
+                    <label for="locConnectionType" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Calling Connection</label>
+                    <select id="locConnectionType" class="bg-slate-800 border border-slate-700 text-white text-xs rounded px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-medium">
+                        <option value="LOCAL_GATEWAY" selected>Premises-based PSTN (Local Gateway)</option>
+                        <option value="CLOUD_CONNECTED_PSTN">Cloud Connected PSTN (CCPP)</option>
+                        <option value="CISCO_CALLING_PLAN">Cisco Calling Plan</option>
+                    </select>
+                </div>
+                <div id="locRoutingChoiceContainer">
+                    <label for="locRoutingChoice" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Routing Choice (PSTN)</label>
+                    <select id="locRoutingChoice" class="bg-slate-800 border border-slate-700 text-white text-xs rounded px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-medium">
+                        <option value="CUCM" selected>CUCM (Route Group)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="locExtLength" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Extension Length</label>
+                    <select id="locExtLength" class="bg-slate-800 border border-slate-700 text-white text-xs rounded px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-medium">
+                        <option value="4" selected>4 Digits</option>
+                        <option value="5">5 Digits</option>
+                        <option value="6">6 Digits</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="locRoutingPrefix" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Steering Code (Optional)</label>
+                    <input type="text" id="locRoutingPrefix" placeholder="e.g. 8" class="bg-slate-800 border border-slate-700 text-white text-xs rounded px-3 py-1.5 w-28 focus:outline-none focus:border-cyan-500" />
+                </div>
+                <div class="flex items-center self-end pb-1.5">
+                    <label class="inline-flex items-center gap-2 cursor-pointer text-xs text-slate-300 font-medium select-none" title="Registers physical address and wiremaps subnets with RedSky E911 Anywhere for Ray Baum's Act compliance">
+                        <input type="checkbox" id="locSyncRedsky" checked class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0" />
+                        <span>Sync RedSky E911</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="syncMerakiLocations(true)" id="btnDryRunLocSync" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-xs px-3.5 py-2 rounded-lg transition border border-slate-600 flex items-center gap-1.5 shadow-md">
+                    <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Dry-Run Location Sync
+                </button>
+                <button type="button" onclick="syncMerakiLocations(false)" id="btnLiveLocSync" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2 rounded-lg transition-colors shadow-md flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Sync to Webex Calling
+                </button>
+            </div>
+        </div>
+
+        <!-- Meraki Location Staging Table -->
+        <div id="locTableContainer" class="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden hidden">
+            <div class="overflow-x-auto max-h-[420px] overflow-y-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950 sticky top-0 text-slate-400 uppercase tracking-wider border-b border-slate-700 z-10">
+                        <tr>
+                            <th class="p-3 w-10 text-center"><input type="checkbox" id="selectAllLocs" onclick="toggleSelectAllLocs(this)" checked class="rounded border-slate-700 bg-slate-800 text-cyan-500 focus:ring-0" /></th>
+                            <th class="p-3">Site / Network Name</th>
+                            <th class="p-3">Physical Street Address</th>
+                            <th class="p-3">City, State ZIP</th>
+                            <th class="p-3">Time Zone</th>
+                            <th class="p-3">Appliance Models</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">RedSky E911</th>
+                            <th class="p-3">Phone Subnet (E911 Wiremap)</th>
+                        </tr>
+                        <tr id="locFilterRow" class="normal-case tracking-normal">
+                             <th class="px-3 pb-2 pt-0 text-center"><span id="locVisibleCount" class="text-[9px] text-slate-500 font-mono" title="Visible / total rows"></span></th>
+                             <th class="px-3 pb-2 pt-0"><input type="text" data-loc-filter="name" oninput="applyLocationFilters()" placeholder="Filter name..." class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[11px] font-normal text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" /></th>
+                             <th class="px-3 pb-2 pt-0"><input type="text" data-loc-filter="address" oninput="applyLocationFilters()" placeholder="Filter address..." class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[11px] font-normal text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" /></th>
+                             <th class="px-3 pb-2 pt-0"><input type="text" data-loc-filter="city" oninput="applyLocationFilters()" placeholder="City, state, zip..." class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[11px] font-normal text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" /></th>
+                             <th class="px-3 pb-2 pt-0"><input type="text" data-loc-filter="tz" oninput="applyLocationFilters()" placeholder="Time zone..." class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[11px] font-normal text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" /></th>
+                             <th class="px-3 pb-2 pt-0"><input type="text" data-loc-filter="models" oninput="applyLocationFilters()" placeholder="Model..." class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[11px] font-normal text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" /></th>
+                             <th class="px-3 pb-2 pt-0">
+                                 <select data-loc-filter="status" onchange="applyLocationFilters()" class="w-full bg-slate-800 border border-slate-700 rounded px-1 py-1 text-[11px] font-normal text-white focus:outline-none focus:border-cyan-500">
+                                     <option value="">All</option>
+                                     <option value="exists">Exists in Webex</option>
+                                     <option value="ready">Ready to Create</option>
+                                     <option value="incomplete">Address Incomplete</option>
+                                 </select>
+                             </th>
+                             <th class="px-3 pb-2 pt-0">
+                                 <select data-loc-filter="redsky" onchange="applyLocationFilters()" class="w-full bg-slate-800 border border-slate-700 rounded px-1 py-1 text-[11px] font-normal text-white focus:outline-none focus:border-cyan-500">
+                                     <option value="">All</option>
+                                     <option value="valid">MSAG Valid</option>
+                                     <option value="ready">Ready to Register</option>
+                                     <option value="ambiguous">Needs Review</option>
+                                     <option value="unconfigured">Unconfigured</option>
+                                 </select>
+                             </th>
+                             <th class="px-3 pb-2 pt-0"><input type="text" data-loc-filter="subnet" oninput="applyLocationFilters()" placeholder="Filter subnet..." class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-[11px] font-normal text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500" /></th>
+                         </tr>
+                     </thead>
+
+                    <tbody id="locTableBody" class="divide-y divide-slate-800">
+                        <!-- Populated via renderMerakiLocations() -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DID Management Card -->
+        <div class="bg-slate-900/60 border border-slate-700/80 rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        Add & Activate External PSTN DIDs
+                    </h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Provision telephone numbers in E.164 format to target Webex Calling locations and configure the site pilot number.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="didTargetLocation" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Target Calling Location</label>
+                    <select id="didTargetLocation" class="bg-slate-800 border border-slate-700 text-white text-xs rounded px-3 py-2 w-full focus:outline-none focus:border-cyan-500 font-medium">
+                        <option value="">Select Webex location...</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="didMainNumber" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Main Pilot DID (E.164, Optional)</label>
+                    <input type="text" id="didMainNumber" placeholder="+15125550199" class="bg-slate-800 border border-slate-700 text-white text-xs rounded px-3 py-2 w-full focus:outline-none focus:border-cyan-500 font-mono" />
+                </div>
+                <div class="flex items-end gap-3">
+                    <button type="button" onclick="provisionLocationDids(true)" id="btnDryRunDids" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold text-xs px-3.5 py-2.5 rounded-lg transition border border-slate-600 flex-1 flex items-center justify-center gap-1.5 shadow">
+                        Dry Run DIDs
+                    </button>
+                    <button type="button" onclick="provisionLocationDids(false)" id="btnLiveDids" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2.5 rounded-lg transition flex-1 flex items-center justify-center gap-1.5 shadow">
+                        Activate DIDs
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <label for="didNumbersTextarea" class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Phone Numbers (One per line, E.164 format: +15125550199)</label>
+                <textarea id="didNumbersTextarea" rows="3" placeholder="+15125550199&#10;+15125550200&#10;+15125550201" class="bg-slate-800 border border-slate-700 text-white text-xs rounded px-3 py-2 w-full focus:outline-none focus:border-cyan-500 font-mono"></textarea>
+            </div>
+        </div>
+
+        <!-- Feedback & Results Output Banner -->
+        <div id="locStatusBanner" class="hidden bg-slate-900 border border-slate-700 rounded-xl p-4 text-xs font-mono">
+            <div class="flex justify-between items-center mb-2">
+                <span id="locStatusTitle" class="text-cyan-400 font-bold">Execution Output</span>
+                <button type="button" onclick="document.getElementById('locStatusBanner').classList.add('hidden')" class="text-slate-400 hover:text-white">✕</button>
+            </div>
+            <pre id="locStatusLog" class="text-slate-300 whitespace-pre-wrap overflow-x-auto max-h-48"></pre>
+        </div>
+    </div>
+</div>

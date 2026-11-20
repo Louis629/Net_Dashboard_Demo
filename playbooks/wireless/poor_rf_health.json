@@ -1,0 +1,33 @@
+{
+  "id": "wifi_poor_rf",
+  "category": "Wireless",
+  "name": "Poor Wireless Signal Quality",
+  "severity": "Medium",
+  "match_mode": "ANY",
+  "conditions": [
+    {
+      "field": "rssi",
+      "operator": "less_than",
+      "value": -78
+    },
+    {
+      "field": "snr",
+      "operator": "less_than",
+      "value": 15
+    }
+  ],
+  "diagnosis": "The endpoint is experiencing severe RF degradation due to distance, physical interference, or poor AP coverage.",
+  "confidence": 90,
+  "recommended_actions": [
+    "Verify endpoint physical location relative to nearest Access Point.",
+    "Check Catalyst Center AP Health Score and channel utilization.",
+    "Verify if client is stuck on 2.4GHz band instead of 5GHz/6GHz."
+  ],
+  "auto_actions": [
+    "show_ap_channel_load_button",
+    "show_servicenow_export_button"
+  ],
+  "kb_id": "KB00104",
+  "escalation_team": "Wireless Network Engineering",
+  "recommended_role": "HelpdeskTier1"
+}

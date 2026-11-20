@@ -1,0 +1,216 @@
+<!-- templates/telecom_verification.html -->
+<div class="space-y-6">
+    <div id="telecom-verification-module" class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-6">
+        <!-- Banner & Header -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between border-b border-slate-700 pb-4 gap-4">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <span class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        Phase 5: Post-Cutover Verification
+                    </span>
+                    <span class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        8-Point Automated Checklist
+                    </span>
+                    <span class="bg-purple-500/10 border border-purple-500/30 text-purple-400 text-[11px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                        License Reconciliation Audit
+                    </span>
+                    <span class="px-2 py-0.5 text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800 rounded">Cutover Sign-Off</span>
+                    <div class="inline-flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1">
+                        <span class="text-xs text-slate-400">Webex Token:</span>
+                        <span class="webex-token-badge text-xs px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30">Not Set</span>
+                        <button type="button" onclick="promptWebexToken()" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold underline ml-1">Set (12h)</button>
+                    </div>
+                </div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2.5 mt-2">
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Post-Cutover Verification &amp; License Reconciliation
+                </h2>
+                <p class="text-xs text-slate-400 mt-1 max-w-4xl">
+                    Execute an automated 8-point validation sequence to verify Webex Calling device online registration, MPP firmware compliance (&ge;11.3), inbound direct DID routing, outbound caller ID presentation, hybrid dial-plan coexistence via Local Gateway, E911 physical geocoding, cloud voicemail with MWI red-light activation, and CUCM Smart Software License release.
+                </p>
+            </div>
+
+            <!-- Cluster Selector -->
+            <div class="flex items-center gap-3">
+                <label class="text-xs font-semibold text-slate-400">CUCM Cluster:</label>
+                <select id="verificationCluster" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                    <option value="PRIMARY">PRIMARY ({{ primary_cucm_host if primary_cucm_host else 'Mainland 12.5' }})</option>
+                    <option value="HAWAII">HAWAII ({{ hawaii_cucm_host if hawaii_cucm_host else 'Hawaii 11.5' }})</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Section 1: Interactive 8-Point Cutover Verification -->
+        <div class="bg-slate-900/70 border border-slate-700/80 rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    8-Point Automated Cutover Verification Checklist
+                </h3>
+                <span class="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                    Live Diagnostics
+                </span>
+            </div>
+
+            <p class="text-xs text-slate-400">
+                Enter the migrated user's email, physical handset MAC address, or extension to initiate the comprehensive 8-point post-cutover diagnostic checklist.
+            </p>
+
+            <!-- Input Parameters Form -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">
+                        User Email
+                    </label>
+                    <input type="email" id="verifyUserEmail" placeholder="user@corp.internal" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">
+                        Handset MAC / CUCM Device Name
+                    </label>
+                    <input type="text" id="verifyMacAddress" placeholder="001122334455, SEP001122334455, or CSFjdoe (optional for softphone)" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">
+                        Extension (DN)
+                    </label>
+                    <input type="text" id="verifyExtension" placeholder="4199" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-mono" />
+                </div>
+            </div>
+
+            <!-- Run Verification Button -->
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <span class="text-[11px] text-slate-400">
+                    Evaluates Webex Control Hub, Local Gateway SIP routes, CUCM translation patterns, and E911 dispatch.
+                </span>
+                <button type="button" onclick="runPostCutoverValidation()" id="btnRunVerification" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-5 py-2 rounded-lg transition shadow flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Run 8-Point Verification
+                </button>
+            </div>
+
+            <!-- Scorecard & Results Display -->
+            <div id="verificationScorecard" class="hidden mt-4 space-y-4">
+                <!-- Readiness Header Banner -->
+                <div id="readinessBanner" class="p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-800/80 border-slate-700">
+                    <div class="flex items-center gap-3">
+                        <span id="readinessBadge" class="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                            INCOMPLETE
+                        </span>
+                        <div>
+                            <h4 id="readinessTitle" class="text-sm font-bold text-white">Cutover Readiness Assessment</h4>
+                            <p id="readinessSubtitle" class="text-xs text-slate-400 mt-0.5">Verification results across 8 standardized cutover checkpoints.</p>
+                        </div>
+                    </div>
+                    <!-- Counter Chips -->
+                    <div class="flex items-center gap-2">
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-2.5 py-1 rounded-md font-semibold flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            Passed: <span id="countPassed" class="font-bold">0</span>
+                        </span>
+                        <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs px-2.5 py-1 rounded-md font-semibold flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            Warnings: <span id="countWarnings" class="font-bold">0</span>
+                        </span>
+                        <span class="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs px-2.5 py-1 rounded-md font-semibold flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                            Failed: <span id="countFailed" class="font-bold">0</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 8-Point Checklist Table -->
+                <div class="overflow-x-auto rounded-xl border border-slate-700">
+                    <table class="w-full text-left text-xs text-slate-300 divide-y divide-slate-700">
+                        <thead class="bg-slate-800/90 text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                            <tr>
+                                <th class="px-3 py-2.5">ID</th>
+                                <th class="px-4 py-2.5">Checkpoint</th>
+                                <th class="px-3 py-2.5">Status</th>
+                                <th class="px-4 py-2.5">Diagnostic Evaluation</th>
+                                <th class="px-4 py-2.5">Recommended Remediation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="verificationChecklistBody" class="divide-y divide-slate-800 bg-slate-900/60 font-sans">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Cross-Platform License Reconciliation Audit -->
+        <div class="bg-slate-900/70 border border-slate-700/80 rounded-xl p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-800 pb-2.5 gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                    <h3 class="text-sm font-bold text-white">Cross-Platform Smart License Reconciliation Audit</h3>
+                    <span class="text-[11px] font-semibold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/30">
+                        FinOps &amp; Compliance
+                    </span>
+                </div>
+                <button type="button" onclick="loadLicenseReconciliation()" id="btnRunLicenseAudit" class="bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs px-4 py-1.5 rounded-lg transition shadow flex items-center gap-1.5 self-start sm:self-auto">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Reconcile Licenses
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-400">
+                Audits on-prem CUCM Smart Software License releases (Enhanced UCL, Basic UCL, Essential UCL) against active Cisco Webex Calling cloud subscription consumption (Professional &amp; Workspace) to eliminate double-licensing and verify budget savings.
+            </p>
+
+            <!-- Reconciliation Summary KPIs -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="licenseKpiGrid">
+                <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-3 text-center">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">CUCM Smart Licenses Reclaimed</span>
+                    <div id="kpiCucmReclaimed" class="text-xl font-bold text-purple-400 mt-1">-</div>
+                    <span class="text-[10px] text-slate-500">On-Prem CSSM Entitlements</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-3 text-center">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Active Webex Calling Subscriptions</span>
+                    <div id="kpiWebexActive" class="text-xl font-bold text-cyan-400 mt-1">-</div>
+                    <span class="text-[10px] text-slate-500">Cloud Control Hub Consumed</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-3 text-center">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Reconciliation Audit Balance</span>
+                    <div id="kpiAuditBalance" class="text-xl font-bold text-emerald-400 mt-1">-</div>
+                    <span id="kpiAuditDesc" class="text-[10px] text-slate-500">Awaiting reconciliation run</span>
+                </div>
+            </div>
+
+            <!-- Detailed Breakdown Table -->
+            <div class="overflow-x-auto rounded-xl border border-slate-700">
+                <table class="w-full text-left text-xs text-slate-300 divide-y divide-slate-700">
+                    <thead class="bg-slate-800/90 text-slate-400 font-semibold uppercase text-[10px] tracking-wider">
+                        <tr>
+                            <th class="px-4 py-2.5">User / Endpoint Category</th>
+                            <th class="px-4 py-2.5">CUCM Smart License Tier</th>
+                            <th class="px-3 py-2.5 text-center">Reclaimed (CUCM)</th>
+                            <th class="px-4 py-2.5">Webex Equivalent Subscription</th>
+                            <th class="px-3 py-2.5 text-center">Active (Webex)</th>
+                            <th class="px-3 py-2.5 text-center">Audit Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="licenseReconciliationBody" class="divide-y divide-slate-800 bg-slate-900/60 font-sans">
+                        <tr>
+                            <td colspan="6" class="px-4 py-5 text-center text-slate-500 italic">
+                                Click "Reconcile Licenses" to execute cross-platform license audit.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="licenseSummaryNote" class="hidden text-xs text-slate-400 bg-slate-800/60 p-3 rounded-lg border border-slate-700 font-sans">
+                <!-- Summary string populated by JS -->
+            </div>
+        </div>
+    </div>
+</div>

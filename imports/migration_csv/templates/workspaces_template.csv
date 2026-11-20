@@ -1,0 +1,6 @@
+displayName,locationName,type,capacity,callingType,extension,phoneNumber,mac,model
+"Lanihuli Lounge Phone","CLH - Billing Lanihuli","desk","1","webexCalling","851845","","70BD96EC9906","Cisco 9841"
+"Aiea Heights Reception","CLH Aiea Heights","desk","1","webexCalling","841490","","10E37601392C","Cisco 7821"
+"Conference Room 101","CLH - Billing Lanihuli","meetingRoom","8","webexCalling","851800","+18085550100","70BD96ECE314","Cisco 8841"
+"Lanihuli Lab Workstation","CLH - Billing Lanihuli","desk","1","webexCalling","857753","","70BD96ECE317","Cisco 9841"
+"Accessioning Station 1","CLH Aiea Heights","desk","1","webexCalling","845187","","10E3760139E8","Cisco 7821"

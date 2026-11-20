@@ -1,0 +1,65 @@
+# =====================================================================
+# NetDashboard Antigravity Workspace Ignore Rules
+# Excludes binary assets, runtime logs, cache, migration CSVs, and exports
+# =====================================================================
+
+# Audio Assets & Media Repositories
+media/
+*.wav
+*.mp3
+
+# Cisco Proprietary Binary Workflow Scripts
+imports/uccx_scripts/*.aef
+*.aef
+
+# Migration & Inventory CSV Data (Keep templates visible for schema reference)
+imports/*.csv
+imports/migration_csv/*.csv
+!imports/migration_csv/templates/**
+
+# Ephemeral Exports, Downloads & Test Outputs
+temp_downloads/
+temp_test_export/
+exports/
+scratch/
+*.zip
+
+# Compliance, Audit Output Dumps & Local Databases
+reports/
+*.db
+*.sqlite
+*.sqlite3
+celery_backend.sqlite
+
+# Logging & Runtime Diagnostics
+logs/
+*.log
+*.log.*
+
+# Python Environment & Build Artifacts
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing Artifacts & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / Local Metadata
+.vscode/
+.idea/
+
+# Environment Secrets (Keep .env.example accessible)
+.env
+.env.*
+!.env.example
+
+# =============================================================================
+# Track only shared VS Code Python workspace settings
+# =============================================================================
+.vscode/*
+!.vscode/settings.json

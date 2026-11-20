@@ -1,0 +1,143 @@
+<!-- templates/telecom_uccx.html -->
+<div class="space-y-6">
+    <div id="uccx-flow-builder-module" class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-700 pb-4">
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <span class="px-2 py-0.5 text-xs font-bold text-red-400 bg-red-950/60 border border-red-800 rounded">Admin Only</span>
+                </div>
+                <h2 class="text-xl font-bold text-white flex items-center gap-2 mt-2">
+                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                    UCCX Application to Webex Contact Center (WxCC) Flow Studio
+                </h2>
+                <p class="text-sm text-slate-400 mt-1">
+                    Discover legacy UCCX Contact Center scripts, configure DTMF menus, and generate native WxCC Flow Builder DAG definitions.
+                </p>
+            </div>
+            <div class="mt-4 md:mt-0 flex items-center gap-3">
+                <label for="uccx-cluster-select" class="text-xs font-semibold text-slate-300 uppercase tracking-wider">UCCX Cluster:</label>
+                <select id="uccx-cluster-select" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-cyan-500 font-medium" onchange="loadUccxClusterAssets()">
+                    <option value="HAWAII" selected>Hawaii (UCCX 12.0 / CUCM 11.5)</option>
+                    <option value="PRIMARY">Mainland (UCCX 12.5 / CUCM 12.5)</option>
+                </select>
+                <button type="button" onclick="loadUccxClusterAssets()" title="Refresh Application Inventory" class="p-2 text-xs font-medium text-white bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg transition">
+                    <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- App Discovery & Parameters Form -->
+        <form id="uccx-flow-form" onsubmit="handleGenerateFlow(event)" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Discovered Application Selector -->
+                <div>
+                    <label for="uccx-app-select" class="block mb-2 text-xs font-semibold text-slate-300 uppercase tracking-wider">UCCX Application Script</label>
+                    <select id="uccx-app-select" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg focus:outline-none focus:border-cyan-500 block w-full p-2.5" onchange="handleAppSelected()" required>
+                        <option value="">-- Discovering Applications... --</option>
+                    </select>
+                </div>
+
+                <!-- Generated Flow Name -->
+                <div>
+                    <label for="flow-name-input" class="block mb-2 text-xs font-semibold text-slate-300 uppercase tracking-wider">Target WxCC Flow Name</label>
+                    <input type="text" id="flow-name-input" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg focus:outline-none focus:border-cyan-500 block w-full p-2.5 font-mono" placeholder="Flow_Hawaii_CustomerService" required />
+                </div>
+
+                <!-- Primary CTI Trigger / Inbound DID -->
+                <div>
+                    <label for="trigger-dn-input" class="block mb-2 text-xs font-semibold text-slate-300 uppercase tracking-wider">CTI Trigger DN / Inbound E.164</label>
+                    <input type="text" id="trigger-dn-input" class="bg-slate-900 border border-slate-700 text-cyan-400 text-xs rounded-lg focus:outline-none focus:border-cyan-500 block w-full p-2.5 font-mono" placeholder="+18085550100" required />
+                </div>
+            </div>
+
+            <!-- Prompts & Operating Schedule Section -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900/60 p-4 rounded-xl border border-slate-700/60">
+                <div>
+                    <label for="open-prompt-input" class="block mb-1 text-xs font-semibold text-slate-300">Open Greeting Audio (.wav)</label>
+                    <input type="text" id="open-prompt-input" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg focus:outline-none focus:border-cyan-500 block w-full p-2 font-mono" placeholder="en_US/MainGreeting.wav" required />
+                    <p class="mt-1 text-[11px] text-slate-500">Audio filename in WxCC Media Repository.</p>
+                </div>
+
+                <div>
+                    <label for="closed-prompt-input" class="block mb-1 text-xs font-semibold text-slate-300">Closed Greeting Audio (Optional)</label>
+                    <input type="text" id="closed-prompt-input" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg focus:outline-none focus:border-cyan-500 block w-full p-2 font-mono" placeholder="en_US/AfterHours.wav" />
+                    <p class="mt-1 text-[11px] text-slate-500">Played when Business Hours evaluate to Closed.</p>
+                </div>
+
+                <div>
+                    <label for="business-hours-id-input" class="block mb-1 text-xs font-semibold text-slate-300">Business Hours Profile ID (Optional)</label>
+                    <input type="text" id="business-hours-id-input" class="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg focus:outline-none focus:border-cyan-500 block w-full p-2 font-mono" placeholder="BH_Hawaii_Operating_Hours" />
+                    <p class="mt-1 text-[11px] text-slate-500">WxCC Business Hours Entity Tag / UUID.</p>
+                </div>
+            </div>
+
+            <!-- DTMF Routing Matrix -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wider">DTMF Key Routing Matrix</h3>
+                        <p class="text-xs text-slate-400">Map caller digits to WxCC Contact Queues (CSQ), Blind Transfers, or Terminations.</p>
+                    </div>
+                    <button type="button" onclick="addDtmfMappingRow()" class="inline-flex items-center px-3 py-1.5 text-xs font-medium text-cyan-300 bg-cyan-950/60 border border-cyan-800/80 hover:bg-cyan-900 rounded-lg transition shadow-sm">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Add DTMF Key
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto border border-slate-700 rounded-xl">
+                    <table class="min-w-full divide-y divide-slate-700">
+                        <thead class="bg-slate-900 text-slate-400">
+                            <tr>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase w-20">Key</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase w-48">Action Type</th>
+                                <th class="px-4 py-2.5 text-left text-xs font-semibold uppercase">Destination / Target Parameter</th>
+                                <th class="px-4 py-2.5 text-center text-xs font-semibold uppercase w-20">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dtmf-matrix-body" class="divide-y divide-slate-700/50 bg-slate-800">
+                            <!-- Populated dynamically via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Submit Button Bar -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-700">
+                <button type="button" onclick="resetFlowStudio()" class="px-5 py-2.5 text-xs font-medium text-slate-300 bg-slate-900 border border-slate-700 rounded-lg hover:bg-slate-700 transition">
+                    Reset Form
+                </button>
+                <button type="submit" id="btn-generate-flow" class="inline-flex items-center px-5 py-2.5 text-xs font-semibold text-white bg-cyan-600 hover:bg-cyan-500 rounded-lg transition-colors shadow-md">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Generate WxCC Flow JSON
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Output Preview & Verification Panel -->
+    <div id="flow-output-container" class="hidden bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-700 pb-3 gap-3">
+            <div>
+                <h3 class="text-md font-bold text-white flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">✓</span>
+                    Generated Flow: <span id="output-flow-title" class="text-cyan-400 font-mono"></span>
+                </h3>
+                <p id="output-flow-meta" class="text-xs text-slate-400 mt-0.5"></p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="copyFlowJsonToClipboard()" class="px-3 py-1.5 text-xs font-medium text-slate-200 bg-slate-700 border border-slate-600 rounded hover:bg-slate-600 transition">
+                    Copy JSON
+                </button>
+                <button type="button" onclick="downloadFlowJsonFile()" class="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 rounded hover:bg-emerald-500 transition shadow">
+                    Download .JSON
+                </button>
+            </div>
+        </div>
+
+        <div class="relative">
+            <pre id="flow-json-viewer" class="bg-slate-900 text-cyan-300 text-xs font-mono p-4 rounded-lg overflow-x-auto max-h-96 border border-slate-700 selection:bg-cyan-900"></pre>
+        </div>
+    </div>
+</div>

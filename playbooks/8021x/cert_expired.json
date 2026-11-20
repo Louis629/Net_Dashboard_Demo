@@ -1,0 +1,30 @@
+{
+  "id": "8021x_cert_expired",
+  "category": "8021X",
+  "name": "Expired Client Certificate",
+  "severity": "High",
+  "match_mode": "ALL",
+  "conditions": [
+    {
+      "field": "ise_failure_code",
+      "operator": "equals",
+      "value": 12514
+    }
+  ],
+  "diagnosis": "The client computer/user certificate is expired, missing, or untrusted by the ISE RADIUS trust store.",
+  "confidence": 95,
+  "recommended_actions": [
+    "Verify the machine certificate exists in certlm.msc (Personal -> Certificates).",
+    "Run 'gpupdate /force' on the target machine via WinRM.",
+    "Restart the 'Wired AutoConfig' (dot3svc) service.",
+    "Retry 802.1X authentication."
+  ],
+  "auto_actions": [
+    "show_windows_deep_dive_button",
+    "show_reauthentication_button",
+    "show_servicenow_export_button"
+  ],
+  "kb_id": "KB00108",
+  "escalation_team": "Desktop Engineering",
+  "recommended_role": "HelpdeskTech"
+}

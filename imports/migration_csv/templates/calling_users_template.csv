@@ -1,0 +1,4 @@
+First Name,Last Name,Display Name,Email,Extension,Phone Number,Location,Device Model,MAC Address,Port
+"Jane","Doe","Jane Doe","jane.doe@corp.internal","844101","+18085550101","HQ Billing","Cisco 8841","2436DAB0D3C5","1"
+"John","Smith","John Smith","john.smith@corp.internal","844102","","Branch West","Cisco 7821","10E3760138AE","1"
+"Robert","Johnson","Robert Johnson","robert.johnson@corp.internal","844103","+18085550103","HQ Billing","Cisco 9841","70BD96EC993D","1"

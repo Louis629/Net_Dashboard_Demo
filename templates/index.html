@@ -1,0 +1,2709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Net Dashboard - Tier 1/2 Toolkit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://global.oktacdn.com/okta-auth-js/7.2.0/okta-auth-js.min.js" type="text/javascript"></script>
+    <style>
+        .tool-view {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+            .tool-view.active {
+                display: block;
+            }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans h-screen overflow-hidden flex text-slate-800">
+
+    <div class="md:hidden fixed w-full bg-slate-900 text-white z-50 flex justify-between items-center p-4 shadow-md">
+        <h1 class="text-lg font-bold tracking-wide">Net Dashboard</h1>
+        <button onclick="document.getElementById('sidebar').classList.toggle('-translate-x-full')" class="focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+    </div>
+
+    <aside id="sidebar" class="bg-slate-900 text-slate-300 w-64 flex-shrink-0 absolute md:relative inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 flex flex-col h-full pt-16 md:pt-0">
+        <div class="p-6 border-b border-slate-800 hidden md:block">
+            <h1 class="text-xl font-bold text-white tracking-wide">Net Dashboard</h1>
+            <p class="text-xs text-slate-500 mt-1 uppercase tracking-wider">Tier 1/2 Toolkit</p>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-6" id="navMenu">
+            <div>
+                <h3 class="px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Troubleshooting</h3>
+                <div class="space-y-1">
+                    <button onclick="switchView('view-tracker', 'Identity Location Tracker', this)" class="w-full flex items-center px-6 py-3 bg-blue-600/10 text-blue-400 border-r-4 border-blue-500 text-sm font-medium transition-colors nav-btn">
+                        Identity Tracker
+                    </button>
+                    <button onclick="switchView('view-windows', 'Windows Deep Dive', this)" class="w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white text-sm font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Windows Deep Dive
+                    </button>
+                    <button onclick="switchView('view-iperf', 'Throughput Test', this)" class="w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white text-sm font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Throughput Test
+                    </button>
+                    <button onclick="switchView('view-network', 'Network Utilities', this)" class="w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white text-sm font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Network Utilities
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex justify-between items-center">
+                    <span>Admin Tools</span>
+                    <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </h3>
+                <div class="space-y-1" id="adminToolsGroup">
+                    <button onclick="switchView('view-ndg', 'Meraki - ISE Audit', this)" class="admin-btn w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white text-sm font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Meraki - ISE Audit
+                    </button>
+                    <button onclick="switchView('view-bypass', 'Imaging 802.1X Bypass', this)" class="admin-btn w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white text-sm font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Imaging 802.1X Bypass
+                    </button>
+                    <button onclick="switchView('view-ztp', 'Meraki ZT Provisioning', this)" class="admin-btn w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white text-sm font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Meraki ZT Provisioning
+                    </button>
+                    <button id="btn-nav-meraki-swap" onclick="switchView('view-swap', 'Meraki Appliance Swap', this)" class="admin-btn hidden w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white text-sm font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Meraki Appliance Swap
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex justify-between items-center">
+                    <span>Telecom Migration</span>
+                    <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </h3>
+                <div class="space-y-1" id="telecomToolsGroup">
+                    <button id="btn-nav-telecom-control" onclick="switchTelecomView('all', 'Webex Calling Migration Control Center (All Phases)', this)" class="admin-btn w-full flex items-center px-6 py-2.5 hover:bg-slate-800 hover:text-white text-xs font-semibold transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Migration Pipeline (All)
+                    </button>
+                    <button id="btn-nav-telecom-phase1" onclick="switchTelecomView('phase1', 'Phase 1: Meraki & Webex Locations', this)" class="admin-btn w-full flex items-center px-6 py-2 hover:bg-slate-800 hover:text-white text-xs font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-400 pl-8">
+                        Phase 1: Locations & DIDs
+                    </button>
+                    <button id="btn-nav-telecom-phase23" onclick="switchTelecomView('phase23', 'Phase 2 & 3: Users & Device Onboarding', this)" class="admin-btn w-full flex items-center px-6 py-2 hover:bg-slate-800 hover:text-white text-xs font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-400 pl-8">
+                        Phase 2-3: Users & Devices
+                    </button>
+                    <button id="btn-nav-telecom-phase4" onclick="switchTelecomView('phase4', 'Phase 4: CUCM Dial-Plan & Decommissioning', this)" class="admin-btn w-full flex items-center px-6 py-2 hover:bg-slate-800 hover:text-white text-xs font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-400 pl-8">
+                        Phase 4: Decommission & Licenses
+                    </button>
+                    <button id="btn-nav-telecom-phase5" onclick="switchTelecomView('phase5', 'Phase 5: Post-Cutover Verification & Licensing Audit', this)" class="admin-btn w-full flex items-center px-6 py-2 hover:bg-slate-800 hover:text-white text-xs font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-400 pl-8">
+                        Phase 5: Cutover Sign-Off
+                    </button>
+                    <button id="btn-nav-telecom-workspaces" onclick="switchView('view-telecom-workspaces', 'Webex Calling Workspace & Device Importer', this)" class="admin-btn w-full flex items-center px-6 py-2.5 hover:bg-slate-800 hover:text-white text-xs font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        Workspaces & MPP CSV
+                    </button>
+                    <button id="btn-nav-telecom-uccx" onclick="switchView('view-telecom-uccx', 'UCCX Application to WxCC Flow Studio', this)" class="admin-btn w-full flex items-center px-6 py-2.5 hover:bg-slate-800 hover:text-white text-xs font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300">
+                        UCCX to WxCC Flow Studio
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="p-3 border-t border-slate-800 bg-slate-950/40">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                    <div id="sidebarUserAvatar" class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm border border-slate-600/40">OP</div>
+                    <div class="text-xs min-w-0 flex-1">
+                        <p class="text-white font-medium truncate" id="sidebarUserLabel" title="Authenticating...">Authenticating...</p>
+                        <p class="text-slate-400 text-[11px] truncate" id="sidebarRoleLabel">Please wait</p>
+                    </div>
+                </div>
+                <button id="logoutBtn" onclick="handleUserLogout('manual')" title="Log Out" aria-label="Log Out" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors border border-transparent hover:border-rose-500/30 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative pt-16 md:pt-0">
+        <header class="bg-white border-b border-slate-200 px-8 py-4 hidden md:flex justify-between items-center shadow-sm z-10">
+            <h2 class="text-slate-800 font-semibold text-xl" id="currentViewTitle">Identity Location Tracker</h2>
+            <div class="inline-flex items-center gap-2 bg-slate-100 border border-slate-300 rounded-lg px-3 py-1.5 shadow-sm">
+                <span class="text-xs font-medium text-slate-600">Webex Token:</span>
+                <span class="webex-token-badge text-xs px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-700 border border-amber-500/30">Not Set</span>
+                <button type="button" onclick="promptWebexToken()" class="text-xs text-blue-600 hover:text-blue-700 font-semibold underline ml-1">Set (12h)</button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="max-w-7xl mx-auto">
+
+                <!-- Identity Tracker -->
+                <div id="view-tracker" class="tool-view active">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-slate-700">Locate Network Endpoint</h3>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Target Hostname, IP, or MAC Address</label>
+                            <input type="text" id="idTrackerHost" placeholder="e.g. US38307, 10.144.2.50, or AA:BB:CC..." class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                        </div>
+                        <button onclick="triggerIdentityTracker()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition shadow-sm">Execute Search</button>
+                    </div>
+                    <div id="trackerOutput" class="transition-all duration-300"></div>
+                </div>
+
+                <!-- Meraki ISE Audit -->
+                <div id="view-ndg" class="tool-view">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-slate-700">Governance Parameters</h3>
+                            <span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded">Admin Only</span>
+                        </div>
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Target Meraki Template</label>
+                                <select id="ndgTemplateId" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                                    <option value="">Loading templates...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Hardware Filter Type</label>
+                                <select id="ndgHardwareFilter" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                                    <option value="1">Target ALL Gateways</option>
+                                    <option value="2">Target ONLY Z-Series</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ISE Type Designation</label>
+                                    <select id="ndgGatewayType" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ISE Location Role</label>
+                                    <select id="ndgGatewayDesignation" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Deployment Stage</label>
+                                    <select id="ndgDeploymentStage" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                                        <option value="Limited Access">Limited Access</option>
+                                        <option value="Intermediate Stage">Intermediate Stage</option>
+                                        <option value="Monitor Mode">Monitor Mode</option>
+                                        <option value="Test Access">Test Access</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="ndgStatusBox" class="hidden mb-4 p-4 rounded-md text-sm border flex flex-col gap-2">
+                            <div class="flex items-center gap-3">
+                                <div id="ndgSpinner" class="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                <span id="ndgStatusText" class="font-medium"></span>
+                            </div>
+                            <div id="ndgProgressContainer" class="w-full bg-white/50 rounded-full h-1.5 mt-1 hidden">
+                                <div id="ndgProgressBar" class="bg-current h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button onclick="triggerTargetedNdgAction('audit')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-md border border-slate-300 transition shadow-sm">Dry Run Audit</button>
+                            <button onclick="triggerTargetedNdgAction('sync')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition shadow-sm">Deploy Live Sync</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 802.1X Bypass & Imaging Preparation -->
+                <div id="view-bypass" class="tool-view">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-5">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                    </svg>
+                                    Imaging 802.1X Bypass & Re-imaging Preparation
+                                </h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Stage new hardware for initial network PXE boot, or purge existing devices from SCCM, Active Directory, and Cisco ISE.</p>
+                            </div>
+                        </div>
+
+                        <!-- Workflow Mode Selector -->
+                        <div class="mb-5">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Select Deployment Scenario</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <label id="modeCardNew" onclick="setBypassMode('new')" class="relative flex items-start p-4 rounded-lg border-2 border-blue-600 bg-blue-50/40 cursor-pointer hover:bg-blue-50 transition shadow-sm">
+                                    <input type="radio" name="bypassDeviceMode" value="new" checked class="mt-1 text-blue-600 focus:ring-blue-500">
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                                            <span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
+                                            New Device (Initial Imaging)
+                                        </span>
+                                        <span class="block text-xs text-slate-500 mt-1">Authorize unconfigured hardware MAC address into Cisco ISE staging bypass group with instant CoA port reset.</span>
+                                    </div>
+                                </label>
+
+                                <label id="modeCardReimage" onclick="setBypassMode('reimage')" class="relative flex items-start p-4 rounded-lg border-2 border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition shadow-sm">
+                                    <input type="radio" name="bypassDeviceMode" value="reimage" class="mt-1 text-indigo-600 focus:ring-indigo-500">
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                                            <span class="inline-block w-2 h-2 rounded-full bg-indigo-500"></span>
+                                            Device to be Re-imaged (Existing Asset)
+                                        </span>
+                                        <span class="block text-xs text-slate-500 mt-1">Remove stale records from Microsoft SCCM & Active Directory, purge ISE certs/profiling, and optionally stage in bypass.</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Inputs Form -->
+                        <div class="space-y-4 mb-6">
+                            <!-- Computer Name (Visible in Reimage mode) -->
+                            <div id="bypassComputerNameContainer" class="hidden">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-sm font-medium text-slate-700">Target Computer Name(s)</label>
+                                    <div class="flex items-center gap-2">
+                                        <span id="bulkDeviceCountBadge" class="text-xs px-2 py-0.5 rounded font-medium bg-indigo-100 text-indigo-700 border border-indigo-200 hidden"></span>
+                                        <span id="bypassComputerNameHint" class="text-xs text-slate-400 font-normal">Single name or bulk list</span>
+                                    </div>
+                                </div>
+                                <textarea id="bypassDeviceName" rows="4" oninput="updateBulkDeviceCount()" placeholder="Enter single computer or paste multiple hostnames (one per line or comma-separated)&#10;e.g.&#10;US27249&#10;US27211&#10;US24675" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 bg-slate-50 text-sm font-mono uppercase"></textarea>
+                                <p class="text-xs text-slate-500 mt-1">Computer hostname(s) to locate and delete in SCCM (SMS_R_System) and Active Directory. Paste lists directly from ticket descriptions.</p>
+                            </div>
+
+                            <!-- MAC Address -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-sm font-medium text-slate-700">Target MAC Address</label>
+                                    <span id="bypassMacHint" class="text-xs text-blue-600 font-normal">Required for ISE Staging</span>
+                                </div>
+                                <input type="text" id="bypassMac" placeholder="AA:BB:CC:DD:EE:FF" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm font-mono uppercase">
+                                <p id="bypassMacSubtext" class="text-xs text-slate-500 mt-1">Physical interface MAC for Cisco ISE MAB authorization and RADIUS CoA.</p>
+                            </div>
+
+                            <!-- Operator / Admin Credential -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Admin Credential</label>
+                                <input type="text" id="operatorId" placeholder="e.g. sitladadm or admin@corp.internal" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                                <p class="text-xs text-slate-400 mt-1">Recorded in the central SCCM audit log and Cisco ISE endpoint description.</p>
+                            </div>
+
+                            <!-- Re-image Action Checkboxes (Visible in Reimage mode) -->
+                            <div id="reimageOptionsContainer" class="hidden p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
+                                <div class="text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Re-imaging Actions to Execute</div>
+                                
+                                <label class="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="chkRemoveSccm" checked class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                    <span><strong>Remove from SCCM</strong> (WMI SMS_R_System deletion & central CSV log)</span>
+                                </label>
+
+                                <label class="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="chkRemoveAd" checked class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                    <span><strong>Remove from Active Directory</strong> (Deletes computer account)</span>
+                                </label>
+
+                                <label class="flex items-center gap-2.5 text-sm text-slate-700 cursor-pointer">
+                                    <input type="checkbox" id="chkRemoveIse" checked class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                    <span><strong>Remove from Cisco ISE</strong> (Purges old 802.1X certificates, profiler & sends CoA)</span>
+                                </label>
+
+                                <div class="pt-2 border-t border-slate-200">
+                                    <label class="flex items-start gap-2.5 text-sm text-slate-700 cursor-pointer">
+                                        <input type="checkbox" id="chkStageIse" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4 mt-0.5">
+                                        <div>
+                                            <span class="font-semibold text-slate-800">Stage in Cisco ISE 802.1X Bypass now</span>
+                                            <p class="text-xs text-slate-500">Leave unchecked if storing hardware in IT office. Check only if immediately connecting to network for reimaging.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button id="btnTriggerBypass" onclick="triggerBypass()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-md transition shadow-sm flex items-center gap-2">
+                            <span>Authorize Initial Imaging (ISE Bypass)</span>
+                        </button>
+                    </div>
+                    <div id="bypassOutput"></div>
+                </div>
+
+                <!-- Windows Deep Dive -->
+                <div id="view-windows" class="tool-view">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold text-slate-700">Windows Deep Dive Diagnostics & Certificate Verification</h3>
+                            <span class="px-2 py-0.5 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded">TEAP / 802.1X Health</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4">
+                            Connects remotely via WinRM using elevated service credentials. Collects TEAP/802.1X network logs, Sonic XML profiles, GPO policies,
+                            and comprehensively evaluates both the <strong>Machine Certificate Store</strong> and the <strong>Logged-in User Certificate Store</strong> (Client Auth EKU, validity, and private keys).
+                        </p>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Target Computer Name</label>
+                            <input type="text" id="winHostname" placeholder="e.g. US38307LT01" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 font-mono uppercase text-sm">
+                        </div>
+                        <button onclick="triggerWindowsDiag()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition shadow-sm flex items-center gap-2">
+                            <span>Execute Collection & Certificate Audit</span>
+                        </button>
+                    </div>
+                    <div id="windowsOutput"></div>
+                </div>
+
+                <!-- Throughput Test -->
+                <div id="view-iperf" class="tool-view">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-slate-700">Enterprise iPerf Sweep</h3>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Target Client Hostname</label>
+                            <input type="text" id="iperfHostname" placeholder="US38307..." class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                        </div>
+                        <button onclick="triggerIperfTest()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition shadow-sm">Run Regional Sweep</button>
+                    </div>
+                    <div id="iperfOutput"></div>
+                </div>
+
+                <!-- Network Utilities -->
+                <div id="view-network" class="tool-view">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-slate-700">Remote Ping & Trace</h3>
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Source Client Hostname</label>
+                                <input type="text" id="netTestHost" placeholder="US38307..." class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Target Destination (IP or FQDN)</label>
+                                <input type="text" id="netTestDest" placeholder="e.g. 10.212.16.110" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50">
+                            </div>
+                        </div>
+                        <button onclick="triggerNetworkUtilities()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition shadow-sm">Execute Diagnostics</button>
+                    </div>
+                    <div id="networkOutput"></div>
+                </div>
+
+                <!-- Meraki Appliance Swap -->
+                <div id="view-swap" class="tool-view hidden">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-slate-700">Meraki Appliance Replacement (MX / Z-Series)</h3>
+                            <span class="px-2 py-0.5 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded">Tech Services</span>
+                        </div>
+
+                        <div class="space-y-4 mb-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Target Meraki Network</label>
+                                <select id="swapNetworkId" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                                    <option value="">Loading networks...</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Old Serial Number (Device to Replace)</label>
+                                    <input type="text" id="swapOldSerial" placeholder="XXXX-XXXX-XXXX" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm font-mono uppercase">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">New Serial Number (Replacement Hardware)</label>
+                                    <input type="text" id="swapNewSerial" placeholder="XXXX-XXXX-XXXX" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm font-mono uppercase">
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-amber-700 bg-amber-50 p-2.5 rounded border border-amber-200">
+                                <strong>⚠️ Safety Check:</strong> The old serial number must be currently assigned to the selected network before the swap can proceed.
+                            </p>
+                        </div>
+
+                        <!-- Live Status Box -->
+                        <div id="swapStatusBox" class="hidden mb-6 p-4 rounded-lg text-sm border flex flex-col gap-3 bg-blue-50 text-blue-900 border-blue-200">
+                            <div class="flex items-center gap-3">
+                                <div id="swapSpinner" class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                <span id="swapStatusText" class="font-bold text-sm">Initializing Hardware Swap...</span>
+                            </div>
+                            <div id="swapProgressContainer" class="w-full bg-blue-200 rounded-full h-1.5 hidden">
+                                <div id="swapProgressBar" class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="triggerApplianceSwap()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition shadow-sm">
+                            Execute Appliance Swap
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Meraki ZT Provisioning Container -->
+                <div id="view-ztp" class="tool-view">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-slate-700">Meraki ZT Provisioning</h3>
+                            <span class="px-2 py-0.5 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded">Admin Only</span>
+                        </div>
+
+                        <div class="space-y-4 mb-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Hardware Serial Number</label>
+                                    <input type="text" id="ztpSerial" placeholder="XXXX-XXXX-XXXX" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm font-mono uppercase">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Target Branch/Network Name</label>
+                                    <input type="text" id="ztpNetworkName" placeholder="e.g. CPL_Austin_PSC" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Site Physical Address</label>
+                                <input type="text" id="ztpPhysicalAddress" placeholder="e.g. 1301 Medical Parkway, Cedar Park, TX 78613" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Target Meraki Template</label>
+                                <select id="ztpTemplateId" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                                    <option value="">Loading templates...</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ISE Type Designation</label>
+                                    <select id="ztpGatewayType" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ISE Location Role</label>
+                                    <select id="ztpGatewayDesignation" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Deployment Stage</label>
+                                    <select id="ztpDeploymentStage" class="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 bg-slate-50 text-sm">
+                                        <option value="Limited Access">Limited Access</option>
+                                        <option value="Intermediate Stage">Intermediate Stage</option>
+                                        <option value="Monitor Mode">Monitor Mode</option>
+                                        <option value="Test Access">Test Access</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ZTP Live Tracker Box -->
+                        <div id="ztpStatusBox" class="hidden mb-6 p-6 rounded-lg text-sm border shadow-inner flex flex-col gap-5 bg-indigo-50 text-indigo-900 border-indigo-200">
+                            <div class="flex items-center gap-3 border-b border-indigo-200/70 pb-3">
+                                <div id="ztpSpinner" class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                <span id="ztpStatusText" class="font-bold text-base tracking-wide">Initializing Zero-Touch Provisioning...</span>
+                            </div>
+
+                            <div id="ztpProgressContainer" class="w-full bg-indigo-200/60 rounded-full h-2 hidden">
+                                <div id="ztpProgressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+
+                            <ul id="ztpStepTracker" class="space-y-3.5 text-sm font-medium mt-1">
+                                <li id="ztp-step-1" class="flex items-center gap-3 text-slate-400 transition-colors" data-label="Create & Claim Meraki Network"><div class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center border-2 border-current text-xs font-bold">1</div> <span>Create & Claim Meraki Network</span></li>
+                                <li id="ztp-step-2" class="flex items-center gap-3 text-slate-400 transition-colors" data-label="Enforce Corporate Template"><div class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center border-2 border-current text-xs font-bold">2</div> <span>Enforce Corporate Template</span></li>
+                                <li id="ztp-step-3" class="flex items-center gap-3 text-slate-400 transition-colors" data-label="Extract Dynamic Subnet Allocations"><div class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center border-2 border-current text-xs font-bold">3</div> <span>Extract Dynamic Subnet Allocations</span></li>
+                                <li id="ztp-step-4" class="flex items-center gap-3 text-slate-400 transition-colors" data-label="Provision Microsoft DHCP Scopes"><div class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center border-2 border-current text-xs font-bold">4</div> <span>Provision Microsoft DHCP Scopes</span></li>
+                                <li id="ztp-step-5" class="flex items-center gap-3 text-slate-400 transition-colors" data-label="Register Cisco ISE RADIUS Client"><div class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center border-2 border-current text-xs font-bold">5</div> <span>Register Cisco ISE RADIUS Client</span></li>
+                            </ul>
+                        </div>
+
+                        <button type="button" onclick="triggerZtpProvision(event)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-md transition shadow-sm">
+                            Execute Provisioning Pipeline
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Telecom Migration View: Complete 5-Phase Pipeline Container (Zero DOM Duplication) -->
+                <div id="view-telecom-pipeline" class="tool-view space-y-8">
+                    <div id="section-telecom-overview" class="telecom-phase-section space-y-6">
+                        {% include 'telecom_control.html' %}
+                    </div>
+                    <div id="section-telecom-phase1" class="telecom-phase-section space-y-6">
+                        {% include 'telecom_locations.html' %}
+                    </div>
+                    <div id="section-telecom-phase23" class="telecom-phase-section space-y-6">
+                        {% include 'telecom_devices.html' %}
+                    </div>
+                    <div id="section-telecom-phase4" class="telecom-phase-section space-y-6">
+                        {% include 'telecom_decommission.html' %}
+                    </div>
+                    <div id="section-telecom-phase5" class="telecom-phase-section space-y-6">
+                        {% include 'telecom_verification.html' %}
+                    </div>
+                </div>
+
+                <!-- Telecom Migration View 2: Webex Calling Workspace & Device Importer -->
+                <div id="view-telecom-workspaces" class="tool-view">
+                    {% include 'telecom_workspaces.html' %}
+                </div>
+
+                <!-- Telecom Migration View 3: UCCX Application to WxCC Flow Studio -->
+                <div id="view-telecom-uccx" class="tool-view">
+                    {% include 'telecom_uccx.html' %}
+                </div>
+
+                <!-- Shared Telecom Migration Script Engine -->
+                {% include 'telecom_scripts.html' %}
+
+            </div>
+        </div>
+    </main>
+
+    <div id="stepUpModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+        <div class="bg-white rounded-lg shadow-xl border border-slate-200 w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-red-600 px-6 py-4 flex items-center gap-3 text-white">
+                <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold text-lg">Step-Up Authentication Required</h3>
+                    <p class="text-xs text-red-100 font-medium">Verify your identity before a live change</p>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-slate-600">Deploying a Live Sync alters production network group infrastructure configurations. Enter your corporate directory password to authenticate.</p>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Username</label>
+                    <input type="text" id="modalLdapUser" placeholder="e.g. lgonzales" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Directory Password</label>
+                    <input type="password" id="modalLdapPass" placeholder="••••••••" class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-red-500 focus:outline-none text-sm">
+                </div>
+            </div>
+
+            <div class="bg-slate-50 px-6 py-4 flex justify-end gap-3 border-t border-slate-100">
+                <button onclick="closeStepUpModal()" class="px-4 py-2 border border-slate-300 text-slate-700 text-sm font-medium rounded-md hover:bg-slate-100 transition">Cancel</button>
+                <button type="button" onclick="submitSyncWithAuth(event)" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-md shadow transition">Authorize & Deploy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- UI View Router ---
+    function switchView(viewId, title, btnElement) {
+        if (viewId === 'view-bypass') {
+            const role = localStorage.getItem("user_role");
+            if (role && role !== "NetworkAdmin" && role !== "HelpdeskTech" && role !== "LocalTechServices") {
+                alert("Access Denied: Imaging 802.1X Bypass & Re-imaging is restricted to Network Admin and Tech Services groups.");
+                return;
+            }
+        }
+        document.querySelectorAll('.tool-view').forEach(el => el.classList.remove('active'));
+        const targetView = document.getElementById(viewId);
+        if (targetView) targetView.classList.add('active');
+        document.getElementById('currentViewTitle').innerText = title;
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.className = "w-full flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white text-sm font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-300";
+        });
+        if (btnElement) {
+            btnElement.className = "w-full flex items-center px-6 py-3 bg-blue-600/10 text-blue-400 border-r-4 border-blue-500 text-sm font-medium transition-colors nav-btn";
+        }
+
+        if (window.innerWidth < 768) {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+        }
+    }
+    window.switchView = switchView;
+
+    function switchTelecomView(phase, title, btnElement) {
+        document.querySelectorAll('.tool-view').forEach(el => el.classList.remove('active'));
+        const pipelineView = document.getElementById('view-telecom-pipeline');
+        if (pipelineView) pipelineView.classList.add('active');
+
+        const titleElem = document.getElementById('currentViewTitle');
+        if (titleElem) titleElem.innerText = title;
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.className = "w-full flex items-center px-6 py-2.5 hover:bg-slate-800 hover:text-white text-xs font-medium transition-colors border-r-4 border-transparent nav-btn text-slate-400";
+        });
+        if (btnElement) {
+            btnElement.className = "w-full flex items-center px-6 py-2.5 bg-blue-600/10 text-blue-400 border-r-4 border-blue-500 text-xs font-semibold transition-colors nav-btn";
+        }
+
+        const sections = document.querySelectorAll('.telecom-phase-section');
+        if (phase === 'all') {
+            sections.forEach(sec => sec.classList.remove('hidden'));
+        } else {
+            sections.forEach(sec => {
+                const targetId = phase === 'overview' ? 'section-telecom-overview' : 'section-telecom-' + phase;
+                if (sec.id === targetId) {
+                    sec.classList.remove('hidden');
+                } else {
+                    sec.classList.add('hidden');
+                }
+            });
+        }
+
+        if (window.innerWidth < 768) {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+        }
+    }
+    window.switchTelecomView = switchTelecomView;
+
+    const authMethod = "{{ auth_method }}".toUpperCase();
+    const appEnvironment = "{{ environment }}".toUpperCase();
+
+    if (appEnvironment === 'LOCAL' && !localStorage.getItem("jwt_token")) {
+        localStorage.setItem("jwt_token", "SIMULATED_LOCAL_TOKEN");
+        localStorage.setItem("user_name", "dev-engineer@corp.internal");
+        localStorage.setItem("user_role", "NetworkAdmin");
+    }
+
+    console.log(`[NetDashboard] Operating Mode: ${appEnvironment} | Auth Engine: ${authMethod}`);
+
+    // --- Identity Provisioning Configuration ---
+    const oktaConfig = {
+        issuer: '{{ okta_issuer }}',
+        clientId: '{{ okta_client_id }}',
+        redirectUri: window.location.origin + '/',
+        scopes: ['openid', 'profile', 'email']
+    };
+
+    const ADMIN_GROUP = '{{ okta_group_network_admin }}';
+    const TECH_GROUP = '{{ okta_group_tech_services }}';
+    const HELPDESK_GROUP = '{{ okta_group_helpdesk }}';
+
+    const AD_ADMIN_GROUP = '{{ ad_group_network_admin }}';
+    const AD_TECH_GROUP = '{{ ad_group_tech_services }}';
+    const AD_HELPDESK_GROUP = '{{ ad_group_helpdesk }}';
+
+    let authClient = null;
+    let canUseApplianceSwap = false;
+    let merakiWebexLocationPreview = null;
+    if (typeof OktaAuth !== 'undefined' && oktaConfig.issuer && !oktaConfig.issuer.includes("okta_issuer")) {
+        try {
+            authClient = new OktaAuth(oktaConfig);
+        } catch (e) {
+            console.warn("OktaAuth init deferred or skipped:", e);
+        }
+    }
+
+    // --- Dynamic Webex 12-Hour Personal Access Token Helpers ---
+    function getStoredWebexToken() {
+        return sessionStorage.getItem("webex_token") 
+            || localStorage.getItem("webex_token") 
+            || document.getElementById("webexAccessToken")?.value.trim() 
+            || "";
+    }
+
+    function setStoredWebexToken(token) {
+        if (token && token.trim()) {
+            const clean = token.trim().replace(/^Bearer\s+/i, '');
+            sessionStorage.setItem("webex_token", clean);
+            localStorage.setItem("webex_token", clean);
+            const input = document.getElementById("webexAccessToken");
+            if (input) input.value = clean;
+        } else {
+            sessionStorage.removeItem("webex_token");
+            localStorage.removeItem("webex_token");
+            const input = document.getElementById("webexAccessToken");
+            if (input) input.value = "";
+        }
+        updateWebexTokenBadges();
+        if (token && token.trim()) {
+            document.dispatchEvent(new CustomEvent("netdashboard:webex-token-set"));
+        }
+    }
+
+    function promptWebexToken() {
+        const current = getStoredWebexToken();
+        const entered = prompt(
+            "Cisco Webex Personal Access Token (12-hour expiration):\n\n" +
+            "Please paste your Bearer token from developer.webex.com:",
+            current
+        );
+        if (entered !== null) {
+            setStoredWebexToken(entered);
+            return entered.trim().replace(/^Bearer\s+/i, '');
+        }
+        return current;
+    }
+
+    function updateWebexTokenBadges() {
+        const hasToken = !!getStoredWebexToken();
+        document.querySelectorAll(".webex-token-badge").forEach(badge => {
+            if (hasToken) {
+                badge.innerText = "Active (12h)";
+                badge.className = "webex-token-badge text-xs px-2 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold";
+            } else {
+                badge.innerText = "Not Set";
+                badge.className = "webex-token-badge text-xs px-2 py-0.5 rounded font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold";
+            }
+        });
+    }
+
+    window.getStoredWebexToken = getStoredWebexToken;
+    window.setStoredWebexToken = setStoredWebexToken;
+    window.promptWebexToken = promptWebexToken;
+    window.updateWebexTokenBadges = updateWebexTokenBadges;
+    updateWebexTokenBadges();
+    // --- Authenticated HTTP Interceptor Pipeline ---
+    async function fetchWithAuth(url, options = {}) {
+        let token = localStorage.getItem("jwt_token");
+        if (!token) {
+            if (appEnvironment === 'LOCAL') {
+                token = "SIMULATED_LOCAL_TOKEN";
+                localStorage.setItem("jwt_token", token);
+                localStorage.setItem("user_name", "dev-engineer@corp.internal");
+                localStorage.setItem("user_role", "NetworkAdmin");
+            } else {
+                throw new Error("No session token found. Please log in.");
+            }
+        }
+
+        options.headers = {
+            ...options.headers,
+            'X-API-Authorization': `Bearer ${token}`
+        };
+
+        const webexToken = getStoredWebexToken();
+        if (webexToken) {
+            options.headers['X-Webex-Token'] = webexToken;
+        }
+
+        const response = await fetch(url, options);
+        if (response.status === 401 && appEnvironment !== 'LOCAL') {
+            localStorage.removeItem("jwt_token");
+            if (appEnvironment === 'DEV') {
+                showDevLdapsLoginModal();
+            } else {
+                window.location.reload();
+            }
+        }
+        return response;
+    }
+
+    // --- Master Bootstrap Identity Initialization Block ---
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            if (appEnvironment === 'LOCAL') {
+                console.log("[NetDashboard] Local developer workspace active. Aborting Okta OIDC Handshake.");
+                setupLocalEnvironment();
+                showLocalDashboard();
+                document.dispatchEvent(new Event("netdashboard:authenticated"));
+                return;
+            }
+
+            if (appEnvironment === 'DEV') {
+                console.log("[NetDashboard] LDAPS authentication active. Aborting Okta OIDC Handshake.");
+                await initDevLdapsEnvironment();
+                return;
+            }
+
+            if (!oktaConfig.issuer || oktaConfig.issuer.includes("okta_issuer")) {
+                throw new Error("Okta is not configured for the production environment.");
+            }
+
+            if (!authClient) {
+                if (typeof OktaAuth !== 'undefined') {
+                    authClient = new OktaAuth(oktaConfig);
+                } else {
+                    console.error("OktaAuth library not loaded in PRODUCTION.");
+                    document.body.innerHTML = `<h2 class="text-center text-red-600 mt-20 font-bold">Authentication Error: Okta library failed to load.</h2>`;
+                    return;
+                }
+            }
+
+            if (authClient.isLoginRedirect()) {
+                try {
+                    await authClient.handleLoginRedirect();
+                } catch (redirectErr) {
+                    console.warn("Stale or expired login redirect detected. Clearing query and re-authorizing:", redirectErr);
+                    // Clear the expired query parameters from URL so the user isn't stuck
+                    window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+                    try { await authClient.tokenManager.clear(); } catch (_) {}
+                    await authClient.signInWithRedirect();
+                    return;
+                }
+                window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+            }
+
+            const isAuthenticated = await authClient.isAuthenticated();
+            if (!isAuthenticated) {
+                await authClient.signInWithRedirect();
+                return;
+            }
+
+            const accessToken = await authClient.getAccessToken();
+            const idToken = await authClient.getIdToken();
+
+            const idTokenObj = await authClient.tokenManager.get('idToken');
+            const tokenPayload = authClient.token.decode(accessToken);
+            const decodedIdToken = idToken ? authClient.token.decode(idToken) : null;
+
+            const oktaGroups = idTokenObj?.claims?.oktaGroups || decodedIdToken?.payload?.oktaGroups || [];
+            window.oktaGroups = oktaGroups;
+
+            const actualUser = tokenPayload?.payload?.preferred_username || tokenPayload?.payload?.email || idTokenObj?.claims?.email || decodedIdToken?.payload?.email || "Okta_User";
+            const actualEmail = tokenPayload?.payload?.email || idTokenObj?.claims?.email || decodedIdToken?.payload?.email || "";
+
+            localStorage.setItem("jwt_token", idToken);
+            localStorage.setItem("user_name", actualUser);
+            localStorage.setItem("user_email", actualEmail);
+
+            const isNocAdmin = oktaGroups.includes(ADMIN_GROUP) || (AD_ADMIN_GROUP && oktaGroups.includes(AD_ADMIN_GROUP)) || oktaGroups.includes("Domain-Admins") || oktaGroups.includes("ISE_NET_ADMIN");
+            const isTechStaff = oktaGroups.includes(TECH_GROUP) || (AD_TECH_GROUP && oktaGroups.includes(AD_TECH_GROUP)) || isNocAdmin || oktaGroups.includes("ISE_NET_TECH");
+            const isHelpdesk = oktaGroups.includes(HELPDESK_GROUP) || (AD_HELPDESK_GROUP && oktaGroups.includes(AD_HELPDESK_GROUP)) || isTechStaff || oktaGroups.includes("ISE_NET_HELPDESK");
+            setApplianceSwapAccess(isNocAdmin || isTechStaff);
+
+            let userRole = "Guest";
+            if (isNocAdmin) userRole = "NetworkAdmin";
+            else if (isTechStaff) userRole = "HelpdeskTech";
+            else if (isHelpdesk) userRole = "HelpdeskTier1";
+            localStorage.setItem("user_role", userRole);
+
+            if (!isNocAdmin) {
+                document.querySelectorAll('.admin-btn').forEach(btn => {
+                    if (btn.getAttribute('onclick').includes('view-bypass') && isTechStaff) {
+                        return;
+                    }
+                    if (btn.getAttribute('onclick').includes('view-swap') && isTechStaff) {
+                        return;
+                    }
+
+                    btn.classList.add('opacity-40', 'cursor-not-allowed', 'text-slate-500');
+                    btn.classList.remove('hover:bg-slate-800', 'hover:text-white', 'text-slate-300');
+
+                    btn.onclick = (e) => {
+                        e.preventDefault();
+                        alert("Access Denied: Your account role does not possess permissions to access this specific administrative tool.");
+                    };
+                });
+            }
+
+            const uiUserLabel = document.getElementById("sidebarUserLabel");
+            const uiRoleLabel = document.getElementById("sidebarRoleLabel");
+            const uiAvatar = document.getElementById("sidebarUserAvatar");
+            if (uiUserLabel) {
+                uiUserLabel.innerText = actualUser;
+                uiUserLabel.title = actualUser;
+            }
+            if (uiAvatar) uiAvatar.innerText = getInitials(actualUser);
+
+            if (uiRoleLabel) {
+                if (isNocAdmin) uiRoleLabel.innerText = "Network Admin";
+                else if (isTechStaff) uiRoleLabel.innerText = "Network Tech";
+                else if (isHelpdesk) uiRoleLabel.innerText = "Helpdesk Tier 1/2";
+                else uiRoleLabel.innerText = "Unauthorized";
+            }
+
+            recordUserActivity(true);
+
+            if (!isHelpdesk && oktaGroups.length > 0) {
+                console.warn("Warning: Authenticated identity does not map to any local toolkit runtime authorizations.");
+            }
+            await populateDropdowns();
+            updateWebexTokenBadges();
+            document.dispatchEvent(new Event("netdashboard:authenticated"));
+
+        } catch (err) {
+            console.error("Okta OIDC Handshake Failure:", err);
+            try { window.history.replaceState({}, document.title, window.location.origin + window.location.pathname); } catch (_) {}
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                console.warn("Insecure context detected over network. Defaulting to local workspace simulation...");
+                setupFallbackDevEnvironment();
+            } else {
+                document.body.innerHTML = `
+                    <div class="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-6 font-sans">
+                        <div class="max-w-md w-full bg-slate-800 border border-slate-700 rounded-xl p-8 shadow-2xl text-center space-y-4">
+                            <div class="w-12 h-12 mx-auto rounded-full bg-red-950/60 border border-red-800 flex items-center justify-center text-red-400">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            </div>
+                            <h2 class="text-xl font-bold text-white">Authentication Session Expired</h2>
+                            <p class="text-xs text-slate-400">
+                                The Okta single-use security token has expired or is invalid. Click below to initiate a clean sign-in handshake.
+                            </p>
+                            <button type="button" onclick="retryOktaLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm py-2.5 px-4 rounded-lg transition-colors shadow-md">
+                                Re-authenticate with Okta
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    });
+
+    async function retryOktaLogin() {
+        try {
+            window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+            if (authClient) {
+                try { await authClient.tokenManager.clear(); } catch (_) {}
+                await authClient.signInWithRedirect();
+            } else {
+                window.location.href = window.location.origin + window.location.pathname;
+            }
+        } catch (e) {
+            console.error("Retry login failed:", e);
+            window.location.href = window.location.origin + window.location.pathname;
+        }
+    }
+    window.retryOktaLogin = retryOktaLogin;
+
+    // --- User Avatar & Initials Helper ---
+    function getInitials(name) {
+        if (!name) return "OP";
+        const clean = name.split("@")[0].replace(/[^a-zA-Z0-9]/g, " ").trim();
+        const parts = clean.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        } else if (clean.length >= 2) {
+            const capitals = clean.match(/[A-Z]/g);
+            if (capitals && capitals.length >= 2) {
+                return (capitals[0] + capitals[1]).toUpperCase();
+            }
+            return clean.substring(0, 2).toUpperCase();
+        }
+        return (clean[0] || "OP").toUpperCase();
+    }
+
+    // --- Session & Idle Inactivity Management (30 Minutes) ---
+    const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+    let lastActivityTimestamp = Date.now();
+    let lastThrottleTime = 0;
+    let idleCheckInterval = null;
+
+    function recordUserActivity(force = false) {
+        const now = Date.now();
+        if (force || (now - lastThrottleTime > 5000)) { // Throttled to 5 seconds
+            lastThrottleTime = now;
+            lastActivityTimestamp = now;
+            try {
+                localStorage.setItem("netdash_last_activity", now.toString());
+            } catch (e) {}
+        }
+    }
+
+    function checkIdleTimeout() {
+        const token = localStorage.getItem("jwt_token");
+        const user = localStorage.getItem("user_name");
+        // Only trigger idle logout if currently authenticated
+        if (!token && !user) return;
+
+        let storedActivity = 0;
+        try {
+            storedActivity = parseInt(localStorage.getItem("netdash_last_activity") || "0", 10);
+        } catch (e) {}
+
+        const effectiveLastActivity = Math.max(lastActivityTimestamp, storedActivity);
+        if (effectiveLastActivity > 0 && (Date.now() - effectiveLastActivity >= IDLE_TIMEOUT_MS)) {
+            console.warn("[NetDashboard] Idle timeout reached (30 minutes of inactivity). Logging out.");
+            handleUserLogout("idle");
+        }
+    }
+
+    function syncRemoteLogout() {
+        const uiUserLabel = document.getElementById("sidebarUserLabel");
+        const uiRoleLabel = document.getElementById("sidebarRoleLabel");
+        const uiAvatar = document.getElementById("sidebarUserAvatar");
+        if (uiUserLabel) {
+            uiUserLabel.innerText = "Logged Out";
+            uiUserLabel.title = "Logged Out";
+        }
+        if (uiRoleLabel) uiRoleLabel.innerText = "Please log in";
+        if (uiAvatar) uiAvatar.innerText = "--";
+        if (appEnvironment === 'DEV' || authMethod === 'LDAPS') {
+            showDevLdapsLoginModal("Your session was terminated in another tab or window.");
+        }
+    }
+
+    function initIdleTimeoutMonitor() {
+        recordUserActivity(true);
+
+        const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+        activityEvents.forEach(evt => {
+            window.addEventListener(evt, () => recordUserActivity(false), { passive: true });
+        });
+
+        // Cross-tab synchronization
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'netdash_last_activity') {
+                const ts = parseInt(e.newValue || '0', 10);
+                if (ts > lastActivityTimestamp) {
+                    lastActivityTimestamp = ts;
+                }
+            } else if (e.key === 'jwt_token' && !e.newValue) {
+                syncRemoteLogout();
+            }
+        });
+
+        if (idleCheckInterval) clearInterval(idleCheckInterval);
+        idleCheckInterval = setInterval(checkIdleTimeout, 15000); // Check every 15 seconds
+    }
+
+    async function handleUserLogout(reason = "manual") {
+        if (reason === "manual") {
+            const confirmed = confirm("Are you sure you want to log out of Net Dashboard?");
+            if (!confirmed) return;
+        }
+
+        const token = localStorage.getItem("jwt_token");
+
+        // Clear local credentials immediately
+        localStorage.removeItem("jwt_token");
+        localStorage.removeItem("user_name");
+        localStorage.removeItem("user_role");
+        localStorage.removeItem("user_email");
+        localStorage.removeItem("netdash_last_activity");
+        try { sessionStorage.clear(); } catch (e) {}
+
+        // Notify server backend for audit logging
+        try {
+            await fetch("/api/v1/auth/logout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { "X-API-Authorization": `Bearer ${token}` } : {})
+                }
+            });
+        } catch (e) {
+            console.warn("Backend logout notification warning:", e);
+        }
+
+        // Update UI sidebar labels
+        const uiUserLabel = document.getElementById("sidebarUserLabel");
+        const uiRoleLabel = document.getElementById("sidebarRoleLabel");
+        const uiAvatar = document.getElementById("sidebarUserAvatar");
+        if (uiUserLabel) {
+            uiUserLabel.innerText = reason === "idle" ? "Session Expired" : "Logged Out";
+            uiUserLabel.title = reason === "idle" ? "Session Expired" : "Logged Out";
+        }
+        if (uiRoleLabel) uiRoleLabel.innerText = reason === "idle" ? "Idle Timeout" : "Please log in";
+        if (uiAvatar) uiAvatar.innerText = "--";
+
+        if (authMethod === 'OKTA' && authClient) {
+            try {
+                if (reason === "idle") {
+                    alert("Your session has expired due to 30 minutes of inactivity. Please sign in again.");
+                }
+                await authClient.signOut();
+                return;
+            } catch (err) {
+                console.warn("Okta sign-out error:", err);
+                window.location.reload();
+                return;
+            }
+        }
+
+        if (appEnvironment === 'DEV' || authMethod === 'LDAPS') {
+            const msg = reason === "idle"
+                ? "Your session has expired due to 30 minutes of inactivity. Please enter your Active Directory credentials to log in."
+                : "You have been logged out. Please enter your Active Directory credentials to log in.";
+            showDevLdapsLoginModal(msg);
+            return;
+        }
+
+        if (appEnvironment === 'LOCAL') {
+            const msg = reason === "idle"
+                ? "Local session timed out after 30 minutes of inactivity. Click below to re-enter sandbox."
+                : "You have logged out of the local developer session.";
+            showDevLdapsLoginModal(msg);
+        }
+    }
+
+    function setupLocalEnvironment() {
+        const localUser = "dev-engineer@corp.internal";
+        const uiUserLabel = document.getElementById("sidebarUserLabel");
+        const uiRoleLabel = document.getElementById("sidebarRoleLabel");
+        const uiAvatar = document.getElementById("sidebarUserAvatar");
+        if (uiUserLabel) {
+            uiUserLabel.innerText = localUser;
+            uiUserLabel.title = localUser;
+        }
+        if (uiRoleLabel) uiRoleLabel.innerText = "Developer (Local Sandbox)";
+        if (uiAvatar) uiAvatar.innerText = getInitials(localUser);
+        window.oktaGroups = ["SIT_ISE_NET_Admin", "Everyone"];
+        localStorage.setItem("user_name", localUser);
+        localStorage.setItem("user_role", "NetworkAdmin");
+        localStorage.setItem("jwt_token", "SIMULATED_LOCAL_TOKEN");
+        setApplianceSwapAccess(true);
+        recordUserActivity(true);
+        populateDropdowns();
+        updateWebexTokenBadges();
+    }
+
+    async function initDevLdapsEnvironment() {
+        let token = localStorage.getItem("jwt_token");
+        if (token && token !== "SIMULATED_DEVELOPMENT_TOKEN" && token !== "SIMULATED_LOCAL_TOKEN") {
+            try {
+                const res = await fetch("/api/v1/me", {
+                    headers: { 'X-API-Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const me = await res.json();
+                    applyDevUserIdentity(me.username, me.role);
+                    await populateDropdowns();
+                    return;
+                }
+            } catch (err) {
+                console.warn("Session check failed, prompting for credentials:", err);
+            }
+        }
+        showDevLdapsLoginModal();
+    }
+
+    function applyDevUserIdentity(username, role) {
+        localStorage.setItem("user_name", username);
+        localStorage.setItem("user_role", role);
+        setApplianceSwapAccess(role === "NetworkAdmin" || role === "LocalTechServices");
+        const uiUserLabel = document.getElementById("sidebarUserLabel");
+        const uiRoleLabel = document.getElementById("sidebarRoleLabel");
+        const uiAvatar = document.getElementById("sidebarUserAvatar");
+        if (uiUserLabel) {
+            uiUserLabel.innerText = username;
+            uiUserLabel.title = username;
+        }
+        if (uiAvatar) uiAvatar.innerText = getInitials(username);
+        if (uiRoleLabel) {
+            if (role === "NetworkAdmin") uiRoleLabel.innerText = "Network Admin";
+            else if (role === "HelpdeskTech" || role === "LocalTechServices") uiRoleLabel.innerText = "Tech Services";
+            else uiRoleLabel.innerText = "Helpdesk";
+        }
+        recordUserActivity(true);
+    }
+
+    function showDevLdapsLoginModal(noticeMessage = null) {
+        const modal = document.getElementById("devLoginModal");
+        const noticeBox = document.getElementById("devLoginNotice");
+        const errBox = document.getElementById("devLoginError");
+        if (errBox) errBox.classList.add("hidden");
+        if (noticeBox) {
+            if (noticeMessage) {
+                noticeBox.innerText = noticeMessage;
+                noticeBox.classList.remove("hidden");
+            } else {
+                noticeBox.classList.add("hidden");
+            }
+        }
+        if (modal) modal.classList.remove("hidden");
+        const userField = document.getElementById("devLoginUser");
+        if (userField) userField.focus();
+    }
+
+    async function handleDevLoginSubmit(e) {
+        e.preventDefault();
+        const u = document.getElementById("devLoginUser").value.trim();
+        const p = document.getElementById("devLoginPass").value;
+        const errBox = document.getElementById("devLoginError");
+        const noticeBox = document.getElementById("devLoginNotice");
+        const btn = document.getElementById("devLoginBtn");
+        if (errBox) errBox.classList.add("hidden");
+        if (noticeBox) noticeBox.classList.add("hidden");
+
+        if (appEnvironment === 'LOCAL') {
+            applyDevUserIdentity(u || "dev-engineer@corp.internal", "NetworkAdmin");
+            localStorage.setItem("jwt_token", "SIMULATED_LOCAL_TOKEN");
+            document.getElementById("devLoginModal").classList.add("hidden");
+            await populateDropdowns();
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Authenticating...";
+
+        try {
+            const resp = await fetch("/api/v1/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+                throw new Error(data.detail || "Authentication failed.");
+            }
+            localStorage.setItem("jwt_token", data.access_token);
+            applyDevUserIdentity(data.username, data.role);
+            document.getElementById("devLoginModal").classList.add("hidden");
+            await populateDropdowns();
+        } catch (err) {
+            errBox.innerText = err.message;
+            errBox.classList.remove("hidden");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Authenticate via LDAPS";
+        }
+    }
+
+    // --- Dynamic Parameters Menu Builder ---
+	async function populateDropdowns() {
+		try {
+			const tmplSelector = document.getElementById('ndgTemplateId');
+			const tmplResponse = await fetchWithAuth('/api/v1/admin/meraki-templates');
+			const templates = await tmplResponse.json();
+
+			if (templates.length === 0) {
+				tmplSelector.innerHTML = '<option value="">No organization templates discovered.</option>';
+			} else {
+				tmplSelector.innerHTML = templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+			}
+
+			document.getElementById('ztpTemplateId').innerHTML = tmplSelector.innerHTML;
+		} catch (err) {
+			document.getElementById('ndgTemplateId').innerHTML = '<option value="">Failed to load templates.</option>';
+		}
+
+		try {
+			const typeSelector = document.getElementById('ndgGatewayType');
+			const roleSelector = document.getElementById('ndgGatewayDesignation');
+			const ndgResponse = await fetchWithAuth('/api/v1/admin/ise-ndg-options');
+			const ndgData = await ndgResponse.json();
+
+			if (ndgData.device_types && ndgData.device_types.length > 0) {
+				typeSelector.innerHTML = ndgData.device_types.map(t => `<option value="${t}">${t}</option>`).join('');
+			}
+			if (ndgData.roles && ndgData.roles.length > 0) {
+				roleSelector.innerHTML = ndgData.roles.map(r => `<option value="${r}">${r}</option>`).join('');
+			}
+
+			document.getElementById('ztpGatewayType').innerHTML = typeSelector.innerHTML;
+			document.getElementById('ztpGatewayDesignation').innerHTML = roleSelector.innerHTML;
+		} catch (err) {
+			console.warn("Failed to load ISE NDG lists. Retaining default layout map.");
+		}
+
+        const netSelector = document.getElementById('swapNetworkId');
+        if (canUseApplianceSwap) {
+            try {
+                const response = await fetchWithAuth('/api/v1/admin/meraki-networks');
+                const networks = await response.json();
+
+                if (networks.length === 0) {
+                    netSelector.innerHTML = '<option value="">No Meraki networks found.</option>';
+                } else {
+                    netSelector.innerHTML = '<option value="" disabled selected>Select Target Network...</option>' +
+                                            networks.map(n => `<option value="${n.id}">${n.name}</option>`).join('');
+                }
+            } catch (err) {
+                console.warn("Failed to populate network dropdown:", err);
+                netSelector.innerHTML = '<option value="">Error loading networks.</option>';
+            }
+        } else {
+            netSelector.innerHTML = '<option value="">Restricted to authorized groups.</option>';
+        }
+	}
+
+    // --- DOM Staging Cleaning Layer Helper ---
+    function setActiveOutputRow(targetRowId, loadingHtml) {
+        ['trackerOutput', 'bypassOutput', 'windowsOutput', 'iperfOutput', 'networkOutput'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '';
+        });
+        const activeRow = document.getElementById(targetRowId);
+        if (activeRow) activeRow.innerHTML = loadingHtml;
+        return activeRow;
+    }
+
+    // --- Compliance Sync & Audit Engine Loop ---
+    async function executeNdgPipeline(mode, stepUpUser, stepUpPass) {
+        const templateId = document.getElementById('ndgTemplateId').value;
+        const hardwareFilter = parseInt(document.getElementById('ndgHardwareFilter').value);
+        const gatewayType = document.getElementById('ndgGatewayType').value;
+        const gatewayDesignation = document.getElementById('ndgGatewayDesignation').value;
+        const deploymentStage = document.getElementById('ndgDeploymentStage').value;
+
+        const statusBox = document.getElementById('ndgStatusBox');
+        const statusText = document.getElementById('ndgStatusText');
+        const spinner = document.getElementById('ndgSpinner');
+        const progressContainer = document.getElementById('ndgProgressContainer');
+        const progressBar = document.getElementById('ndgProgressBar');
+
+        const currentActiveGroups = window.oktaGroups || [];
+
+        statusBox.className = 'mb-4 p-3 rounded-md text-sm flex flex-col gap-2 bg-blue-50 text-blue-800 border border-blue-200';
+        statusBox.classList.remove('hidden');
+        if (spinner) spinner.classList.remove('hidden');
+
+        if (progressContainer) progressContainer.classList.remove('hidden');
+        if (progressBar) progressBar.style.width = '0%';
+
+        statusText.innerText = "Processing transactional token mapping attributes...";
+        const endpoint = mode === 'audit' ? '/api/v1/admin/ise-ndg-audit' : '/api/v1/admin/ise-ndg-sync';
+
+        try {
+            const response = await fetchWithAuth(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    template_id: templateId,
+                    hardware_filter: hardwareFilter,
+                    gateway_type: gatewayType,
+                    gateway_designation: gatewayDesignation,
+                    deployment_stage: deploymentStage,
+                    step_up_user: stepUpUser,
+                    step_up_pass: stepUpPass,
+                    client_groups: currentActiveGroups
+                })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (spinner) spinner.classList.add('hidden');
+                if (progressContainer) progressContainer.classList.add('hidden');
+                statusBox.className = 'mb-4 p-3 rounded-md text-sm flex flex-col gap-2 bg-red-50 text-red-800 border border-red-200';
+                statusText.innerText = `Execution Failure: ${data.detail || 'Operation blocked.'}`;
+                return;
+            }
+
+            statusText.innerText = data.message || "Action queued successfully.";
+
+            if (data.task_id) {
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const statusRes = await fetchWithAuth(`/api/v1/admin/ise-ndg-audit/status/${data.task_id}`);
+                        const statusData = await statusRes.json();
+
+                        if (progressBar) progressBar.style.width = `${statusData.progress}%`;
+                        statusText.innerText = statusData.message;
+
+                        if (statusData.status === "COMPLETED" || statusData.status === "FAILED") {
+                            clearInterval(pollInterval);
+                            if (spinner) spinner.classList.add('hidden');
+                            if (progressContainer) setTimeout(() => progressContainer.classList.add('hidden'), 2000);
+
+                            if (statusData.status === "FAILED") {
+                                statusBox.className = 'mb-4 p-3 rounded-md text-sm flex flex-col gap-2 bg-red-50 text-red-800 border border-red-200';
+                            } else {
+                                statusBox.className = 'mb-4 p-3 rounded-md text-sm flex flex-col gap-2 bg-green-50 text-green-800 border border-green-200';
+                            }
+                        }
+                    } catch (pollErr) {
+                        console.error("Tracking status loop error:", pollErr);
+                    }
+                }, 3000);
+            }
+        } catch (err) {
+            if (spinner) spinner.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
+            statusBox.className = 'mb-4 p-3 rounded-md text-sm flex flex-col gap-2 bg-red-50 text-red-800 border border-red-200';
+            statusText.innerText = err.message || "Communication failure routing payload.";
+        }
+    }
+
+    // --- Diagnostic Report Markup Layout Render Generator ---
+    function renderHumanFriendlyResult(targetContainer, data) {
+        if (!targetContainer) return;
+        targetContainer.innerHTML = '';
+
+        if (data.error) {
+            targetContainer.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700 font-bold">
+                    Error Processing Request: ${data.error}
+                </div>`;
+            return;
+        }
+
+        if (data.ui_type === "DIAGNOSTIC_REPORT") {
+            let statusColor = data.status === "ACTIVE_SESSION_FOUND"
+                ? "bg-green-100 text-green-800 border-green-200"
+                : "bg-amber-100 text-amber-800 border-amber-200";
+
+            let html = `
+                <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200 mt-4 animate-fade-in">
+                    <div class="flex flex-wrap items-center justify-between mb-4 border-b pb-4 gap-2">
+                        <h3 class="text-xl font-bold text-slate-800">Endpoint Location Profile Summary</h3>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold border ${statusColor}">
+                            ${(data.status || 'UNKNOWN').replace(/_/g, ' ')}
+                        </span>
+                    </div>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r">
+                        <p class="text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Infrastructure Footprint Core Correlation</p>
+                        <p class="text-blue-900 font-medium">${data.triage_hint || 'No automated triage summary compiled.'}</p>
+                    </div>`;
+
+            if (data.catalyst_telemetry && data.catalyst_telemetry.dnac_found) {
+                const cat = data.catalyst_telemetry;
+
+                let healthBadgeColor = "bg-slate-100 text-slate-700 border-slate-300";
+                let displayScore = "N/A";
+
+                if (cat.health_score !== "N/A" && cat.health_score !== null) {
+                    const rawScore = parseFloat(cat.health_score);
+
+                    if (rawScore > 0) {
+                        displayScore = `${rawScore}/10`;
+                        if (rawScore < 4) {
+                            healthBadgeColor = "bg-red-100 text-red-800 border-red-300";
+                        } else if (rawScore < 8) {
+                            healthBadgeColor = "bg-amber-100 text-amber-800 border-amber-300";
+                        } else {
+                            healthBadgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
+                        }
+                    } else {
+                        displayScore = "N/A (VPN)";
+                        healthBadgeColor = "bg-slate-100 text-slate-700 border-slate-300";
+                    }
+                } else if (cat.client_type === "VPN") {
+                    displayScore = "N/A (VPN)";
+                }
+
+                let connTypeLabel = "🔌 Wired Interface";
+                if (cat.client_type === "WIRELESS") {
+                    connTypeLabel = "📶 Wireless";
+                } else if (cat.client_type === "VPN" || (data.nas_name && data.nas_name.toUpperCase().includes("VPN"))) {
+                    connTypeLabel = "🔒 Remote Access VPN";
+                }
+
+                const gridLayout = cat.client_type === "WIRELESS" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-2 md:grid-cols-3";
+
+                let extraCardsHtml = "";
+                if (cat.client_type === "WIRELESS") {
+                    extraCardsHtml = `
+                        <div class="bg-white p-2.5 rounded border border-indigo-100">
+                            <p class="text-slate-400 font-bold uppercase">SSID</p>
+                            <p class="font-bold text-indigo-900 mt-0.5">${cat.ssid || 'N/A'}</p>
+                        </div>
+                        <div class="bg-white p-2.5 rounded border border-indigo-100">
+                            <p class="text-slate-400 font-bold uppercase">Signal Strength (RSSI)</p>
+                            <p class="font-bold text-indigo-900 mt-0.5">${cat.rssi !== 'N/A' ? cat.rssi + ' dBm' : 'N/A'}</p>
+                        </div>
+                        <div class="bg-white p-2.5 rounded border border-indigo-100">
+                            <p class="text-slate-400 font-bold uppercase">Signal-to-Noise (SNR)</p>
+                            <p class="font-bold text-indigo-900 mt-0.5">${cat.snr !== 'N/A' ? cat.snr + ' dB' : 'N/A'}</p>
+                        </div>
+                        <div class="bg-white p-2.5 rounded border border-indigo-100">
+                            <p class="text-slate-400 font-bold uppercase">Band / Channel</p>
+                            <p class="font-bold text-indigo-900 mt-0.5">${cat.frequency || 'N/A'} (Ch ${cat.channel || 'N/A'})</p>
+                        </div>`;
+                } else {
+                    extraCardsHtml = `
+                        <div class="bg-white p-2.5 rounded border border-indigo-100">
+                            <p class="text-slate-400 font-bold uppercase">Client IP (Assurance)</p>
+                            <p class="font-bold text-indigo-900 mt-0.5 font-mono">${cat.ip_address || 'N/A'}</p>
+                        </div>
+                        <div class="bg-white p-2.5 rounded border border-indigo-100">
+                            <p class="text-slate-400 font-bold uppercase">Access Switch IP</p>
+                            <p class="font-bold text-indigo-900 mt-0.5 font-mono">${cat.nas_ip || 'N/A'}</p>
+                        </div>`;
+                }
+
+                html += `
+                    <div class="bg-indigo-50/60 border border-indigo-200 rounded-lg p-5 mb-6 shadow-sm">
+                        <div class="flex items-center justify-between border-b border-indigo-200/70 pb-3 mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">📡</span>
+                                <h4 class="font-bold text-indigo-950 text-base">Catalyst Center Assurance Telemetry</h4>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${healthBadgeColor}">
+                                    Health Score: ${displayScore}
+                                </span>
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">
+                                    ${cat.status || 'Connected'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="grid ${gridLayout} gap-3 text-xs">
+                            <div class="bg-white p-2.5 rounded border border-indigo-100">
+                                <p class="text-slate-400 font-bold uppercase">Connection Type</p>
+                                <p class="font-bold text-indigo-900 mt-0.5">${connTypeLabel}</p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded border border-indigo-100">
+                                <p class="text-slate-400 font-bold uppercase">Infrastructure Hardware</p>
+                                <p class="font-bold text-indigo-900 mt-0.5 truncate" title="${cat.nas_name}">${cat.nas_name}</p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded border border-indigo-100">
+                                <p class="text-slate-400 font-bold uppercase">Interface / Port</p>
+                                <p class="font-bold text-indigo-900 mt-0.5">${cat.switch_port}</p>
+                            </div>
+                            <div class="bg-white p-2.5 rounded border border-indigo-100">
+                                <p class="text-slate-400 font-bold uppercase">Assigned VLAN</p>
+                                <p class="font-bold text-indigo-900 mt-0.5">${cat.vlan}</p>
+                            </div>
+                            ${extraCardsHtml}
+                        </div>
+                    </div>`;
+            }
+
+            html += `
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 text-sm">
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs text-slate-400 uppercase font-bold">MAC Address</p>
+                            <p class="font-mono font-medium text-slate-800 mt-0.5">${data.mac_address || 'N/A'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs text-slate-400 uppercase font-bold">Device Profiling Classification</p>
+                            <p class="font-medium text-slate-800 mt-0.5">${data.endpoint_profile || 'Unknown/Generic'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs text-slate-400 uppercase font-bold">Authenticated Identity</p>
+                            <p class="font-medium text-slate-800 mt-0.5 truncate" title="${data.username}">${data.username || 'N/A'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs text-slate-400 uppercase font-bold">Network Access Switch IP</p>
+                            <p class="font-mono font-medium text-slate-800 mt-0.5">${data.nas_ip || 'N/A'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs text-slate-400 uppercase font-bold">Active Interface / Port</p>
+                            <p class="font-medium text-slate-800 mt-0.5">${data.switch_port || 'N/A'}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded border border-slate-100">
+                            <p class="text-xs text-slate-400 uppercase font-bold">Assigned Data VLAN</p>
+                            <p class="font-semibold text-blue-600 mt-0.5">${data.vlan || 'N/A'}</p>
+                        </div>
+                    </div>`;
+
+            if (data.recent_history && data.recent_history.length > 0) {
+                html += `
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">RADIUS Access Transactions (Last 24h)</h4>
+                    <div class="overflow-x-auto rounded border border-slate-200">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                                    <th class="p-2.5">Timestamp (UTC)</th>
+                                    <th class="p-2.5">Identity</th>
+                                    <th class="p-2.5">RADIUS Outcome</th>
+                                    <th class="p-2.5">Applied Authorization Profile</th>
+                                    <th class="p-2.5">Denial/Drop Attributes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-white text-slate-700">`;
+
+                data.recent_history.forEach(row => {
+                    let rowColor = row.status.includes("Passed") ? "text-emerald-600 font-bold" : "text-rose-500 font-bold";
+                    let parsedTime = row.timestamp ? row.timestamp.replace('T', ' ').substring(0, 19) : 'N/A';
+                    html += `
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="p-2.5 font-mono text-slate-500 whitespace-nowrap">${parsedTime}</td>
+                            <td class="p-2.5 font-medium text-blue-800 truncate max-w-[160px]" title="${row.username}">${row.username || '-'}</td>
+                            <td class="p-2.5 ${rowColor} whitespace-nowrap">${row.status}</td>
+                            <td class="p-2.5 font-medium text-slate-800">${row.authz_profile || '-'}</td>
+                            <td class="p-2.5 text-slate-500 truncate max-w-[200px]" title="${row.failure_reason !== 'N/A' ? row.failure_reason : ''}">${row.failure_reason !== 'N/A' ? row.failure_reason : '-'}</td>
+                        </tr>`;
+                });
+                html += `</tbody></table></div></div>`;
+            } else {
+                html += `</div>`;
+            }
+            targetContainer.innerHTML = html;
+        }
+    }
+
+    // --- Live Form Submission Drivers ---
+    async function triggerIdentityTracker() {
+        const targetInput = document.getElementById('idTrackerHost').value.trim();
+        if (!targetInput) return alert('Please enter a target computer name, IP address, or MAC address.');
+
+        const targetRow = setActiveOutputRow('trackerOutput',
+            `<div class="bg-white p-8 rounded-lg shadow-md border border-slate-100 text-center text-blue-600 animate-pulse font-medium">
+				Querying network orchestration matrix for tracking footprint of [${targetInput}]...<br>
+				<span class="text-sm font-normal text-slate-500">(Correlating live AAA sessions and MAC address tables)</span>
+			 </div>`
+        );
+
+        try {
+            const response = await fetchWithAuth(`/api/v1/diagnose/${encodeURIComponent(targetInput)}`);
+            const resData = await response.json();
+
+            if (!response.ok) {
+                targetRow.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700 font-bold">Error: ${resData.detail || "Failed to locate network device identifier footprint."}</div>`;
+                return;
+            }
+
+            resData.ui_type = "DIAGNOSTIC_REPORT";
+            renderHumanFriendlyResult(targetRow, resData);
+        } catch (err) {
+            targetRow.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700 font-bold">Network communication failure with backend identity service tracking grid.</div>`;
+        }
+    }
+
+    async function triggerWindowsDiag() {
+        const hostname = document.getElementById('winHostname').value.trim();
+        const outputDiv = document.getElementById('windowsOutput');
+        if (!hostname) return alert("Please enter a target computer name.");
+
+        setActiveOutputRow('windowsOutput', '');
+        outputDiv.innerHTML = `<div class="p-3 rounded-md text-sm flex items-center gap-3 bg-purple-50 text-purple-800 border border-purple-200 shadow-sm"><div class="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div><span class="font-medium">Connecting to ${hostname} via WinRM... this may take up to 2 minutes.</span></div>`;
+
+        try {
+            const response = await fetchWithAuth('/api/v1/windows-diag', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hostname: hostname })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                outputDiv.innerHTML = `<div class="p-3 rounded-md text-sm font-medium bg-red-50 text-red-800 border border-red-200 shadow-sm">Error: ${errData.detail || "Failed to run diagnostics."}</div>`;
+                return;
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = downloadUrl;
+            a.download = `${hostname}_TEAP_Logs.zip`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(downloadUrl);
+            a.remove();
+
+            outputDiv.innerHTML = `<div class="p-3 rounded-md text-sm font-medium bg-green-50 text-green-800 border border-green-200 shadow-sm">Success! Network diagnostic logs and certificate verification archive for ${hostname} have been downloaded securely.</div>`;
+        } catch (error) {
+            outputDiv.innerHTML = `<div class="p-3 rounded-md text-sm font-medium bg-red-50 text-red-800 border border-red-200 shadow-sm">Network error communicating with the Python server.</div>`;
+        }
+    }
+
+    function updateBulkDeviceCount() {
+        const val = document.getElementById('bypassDeviceName') ? document.getElementById('bypassDeviceName').value : '';
+        const badge = document.getElementById('bulkDeviceCountBadge');
+        const btn = document.getElementById('btnTriggerBypass');
+        const modeRadio = document.querySelector('input[name="bypassDeviceMode"]:checked');
+        const mode = modeRadio ? modeRadio.value : 'new';
+        if (mode !== 'reimage') return;
+
+        const tokens = val.split(/[,\r\n\s]+/).filter(t => t.trim().length > 0);
+        if (tokens.length > 1) {
+            if (badge) {
+                badge.innerText = `${tokens.length} devices detected`;
+                badge.classList.remove('hidden');
+            }
+            if (btn) {
+                btn.className = "bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-6 rounded-md transition shadow-sm flex items-center gap-2";
+                btn.innerHTML = `<span>Execute Bulk Re-imaging (${tokens.length} Devices)</span>`;
+            }
+        } else {
+            if (badge) badge.classList.add('hidden');
+            if (btn) {
+                btn.className = "bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-6 rounded-md transition shadow-sm flex items-center gap-2";
+                btn.innerHTML = `<span>Execute Re-imaging Preparation</span>`;
+            }
+        }
+    }
+
+    function setBypassMode(mode) {
+        const isNew = (mode === 'new');
+        const radioNew = document.querySelector('input[name="bypassDeviceMode"][value="new"]');
+        const radioReimage = document.querySelector('input[name="bypassDeviceMode"][value="reimage"]');
+        if (radioNew) radioNew.checked = isNew;
+        if (radioReimage) radioReimage.checked = !isNew;
+
+        const cardNew = document.getElementById('modeCardNew');
+        const cardReimage = document.getElementById('modeCardReimage');
+        const compContainer = document.getElementById('bypassComputerNameContainer');
+        const reimageOptions = document.getElementById('reimageOptionsContainer');
+        const macHint = document.getElementById('bypassMacHint');
+        const macSubtext = document.getElementById('bypassMacSubtext');
+        const btn = document.getElementById('btnTriggerBypass');
+
+        if (isNew) {
+            if (cardNew) cardNew.className = "relative flex items-start p-4 rounded-lg border-2 border-blue-600 bg-blue-50/40 cursor-pointer hover:bg-blue-50 transition shadow-sm";
+            if (cardReimage) cardReimage.className = "relative flex items-start p-4 rounded-lg border-2 border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition shadow-sm";
+            if (compContainer) compContainer.classList.add('hidden');
+            if (reimageOptions) reimageOptions.classList.add('hidden');
+            if (macHint) {
+                macHint.innerText = "Required for ISE Staging";
+                macHint.className = "text-xs text-blue-600 font-normal";
+            }
+            if (macSubtext) macSubtext.innerText = "Physical interface MAC for Cisco ISE MAB authorization and RADIUS CoA.";
+            if (btn) {
+                btn.className = "bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-md transition shadow-sm flex items-center gap-2";
+                btn.innerHTML = `<span>Authorize Initial Imaging (ISE Bypass)</span>`;
+            }
+        } else {
+            if (cardNew) cardNew.className = "relative flex items-start p-4 rounded-lg border-2 border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition shadow-sm";
+            if (cardReimage) cardReimage.className = "relative flex items-start p-4 rounded-lg border-2 border-indigo-600 bg-indigo-50/40 cursor-pointer hover:bg-indigo-50 transition shadow-sm";
+            if (compContainer) compContainer.classList.remove('hidden');
+            if (reimageOptions) reimageOptions.classList.remove('hidden');
+            if (macHint) {
+                macHint.innerText = "Optional if Computer Name provided";
+                macHint.className = "text-xs text-slate-400 font-normal";
+            }
+            if (macSubtext) macSubtext.innerText = "If omitted, MAC will be automatically extracted from SCCM asset inventory.";
+            updateBulkDeviceCount();
+        }
+    }
+
+    function triggerBypass() {
+        const modeRadio = document.querySelector('input[name="bypassDeviceMode"]:checked');
+        const mode = modeRadio ? modeRadio.value : 'new';
+        const mac = document.getElementById('bypassMac').value.trim();
+        const tech = document.getElementById('operatorId').value.trim();
+        const deviceNameInput = document.getElementById('bypassDeviceName') ? document.getElementById('bypassDeviceName').value.trim() : '';
+
+        if (!tech) return alert('Please enter your Admin Credential.');
+
+        if (mode === 'new') {
+            if (!mac) return alert('Please enter the Target MAC Address for initial bypass staging.');
+            executeBypassRequest('new', null, null);
+        } else {
+            if (!deviceNameInput && !mac) {
+                return alert('Please enter either the Target Computer Name(s) or MAC Address for reimaging preparation.');
+            }
+            // Mandatory secondary authentication prior to running re-imaging workflow
+            openStepUpModal('reimage');
+        }
+    }
+
+    async function executeBypassRequest(mode, stepUpUser = null, stepUpPass = null) {
+        const mac = document.getElementById('bypassMac').value.trim();
+        const tech = document.getElementById('operatorId').value.trim();
+        const deviceNameInput = document.getElementById('bypassDeviceName') ? document.getElementById('bypassDeviceName').value.trim() : '';
+
+        const removeSccm = document.getElementById('chkRemoveSccm') ? document.getElementById('chkRemoveSccm').checked : true;
+        const removeAd = document.getElementById('chkRemoveAd') ? document.getElementById('chkRemoveAd').checked : true;
+        const removeIse = document.getElementById('chkRemoveIse') ? document.getElementById('chkRemoveIse').checked : true;
+        const stageIse = document.getElementById('chkStageIse') ? document.getElementById('chkStageIse').checked : false;
+
+        const parsedDevices = deviceNameInput.split(/[,\r\n\s]+/).filter(t => t.trim().length > 0);
+        const isBulk = parsedDevices.length > 1;
+
+        const loadingMsg = (mode === 'new')
+            ? 'Updating Cisco ISE database and dispatching RADIUS CoA...'
+            : (isBulk
+                ? `Executing Bulk Re-imaging Cleanup on ${parsedDevices.length} workstations: Communicating across SCCM SMS Provider, Active Directory, and Cisco ISE...`
+                : 'Executing Re-imaging Cleanup: Authenticating and querying SCCM, Active Directory, and Cisco ISE...');
+
+        const targetRow = setActiveOutputRow('bypassOutput', `
+            <div class="bg-white p-8 rounded-lg shadow-md border border-slate-100 text-center text-slate-500 animate-pulse font-medium">
+                <div class="inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <div>${loadingMsg}</div>
+                <div class="text-xs text-slate-400 mt-1">This operation communicates across management servers and domain controllers.</div>
+            </div>
+        `);
+
+        const payload = {
+            device_type: mode,
+            mac_address: mac || null,
+            device_name: deviceNameInput || null,
+            device_names: isBulk ? parsedDevices : (parsedDevices.length === 1 ? parsedDevices : null),
+            operator_id: tech,
+            remove_sccm: removeSccm,
+            remove_ad: removeAd,
+            remove_ise: removeIse,
+            stage_in_ise: stageIse,
+            step_up_user: stepUpUser || null,
+            step_up_pass: stepUpPass || null
+        };
+
+        try {
+            const response = await fetchWithAuth('/api/v1/bypass', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                targetRow.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700">
+                        <div class="font-bold mb-1">Execution Error</div>
+                        <div class="text-sm">${data.detail || "Failed to execute bypass workflow."}</div>
+                    </div>`;
+                return;
+            }
+
+            if (mode === 'new') {
+                const ise = data.ise_bypass || {};
+                targetRow.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-emerald-500 bg-emerald-50 mt-4 animate-fade-in">
+                        <div class="flex items-center justify-between mb-3 border-b border-emerald-200 pb-2">
+                            <h3 class="text-lg font-bold text-emerald-900 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                MAB Staging Authorization Injected
+                            </h3>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-800 font-semibold uppercase">Initial Imaging</span>
+                        </div>
+                        <div class="space-y-1.5 text-sm text-emerald-800">
+                            <p><strong class="font-semibold text-emerald-900">Endpoint MAC:</strong> ${data.mac || mac}</p>
+                            <p><strong class="font-semibold text-emerald-900">Provisioning Group:</strong> ${ise.group || 'Staging_Imaging_Bypass'}</p>
+                            <p><strong class="font-semibold text-emerald-900">RADIUS CoA Flushed:</strong> ${ise.coa_applied ? 'Instant port re-auth triggered.' : 'Pending connection toggle.'}</p>
+                            <p><strong class="font-semibold text-emerald-900">Authorized By:</strong> ${tech}</p>
+                        </div>
+                    </div>`;
+            } else if (data.is_bulk) {
+                const summary = data.summary || {};
+                const devices = data.devices || [];
+                const total = data.total || devices.length;
+
+                window._lastBulkDevices = devices;
+                window._lastBulkTimestamp = data.timestamp;
+                window.exportBulkResultsToCsv = function() {
+                    if (!window._lastBulkDevices || !window._lastBulkDevices.length) return;
+                    const rows = [
+                        ["Device Name", "SCCM Status", "SCCM ResourceID", "AD Status", "Resolved MAC", "ISE Purge Status", "Overall Success", "Timestamp"]
+                    ];
+                    window._lastBulkDevices.forEach(d => {
+                        const sccmStatus = d.sccm ? (d.sccm.removed ? "Removed" : (d.sccm.found === false ? "Not Found" : (d.sccm.error ? "Error" : "Skipped"))) : "N/A";
+                        const adStatus = d.ad ? (d.ad.removed ? "Removed" : (d.ad.found === false ? "Not Found" : (d.ad.error ? "Error" : "Skipped"))) : "N/A";
+                        const iseStatus = d.ise_removal ? (d.ise_removal.status || (d.ise_removal.deleted ? "Purged" : "N/A")) : "N/A";
+                        rows.push([
+                            d.device_name || "",
+                            sccmStatus,
+                            d.sccm ? (d.sccm.resource_id || "") : "",
+                            adStatus,
+                            d.resolved_mac || "",
+                            iseStatus,
+                            d.success ? "Success" : "Failed",
+                            window._lastBulkTimestamp || new Date().toISOString()
+                        ]);
+                    });
+                    const csvContent = rows.map(e => e.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = downloadUrl;
+                    link.download = `bulk_reimage_results_${new Date().toISOString().slice(0, 10)}.csv`;
+                    document.body.appendChild(link);
+                    link.click();
+                    window.URL.revokeObjectURL(downloadUrl);
+                    link.remove();
+                };
+
+                const tableRows = devices.map((d, idx) => {
+                    const sccmInfo = d.sccm || {};
+                    const adInfo = d.ad || {};
+                    const iseRem = d.ise_removal || {};
+
+                    const sccmTag = !sccmInfo.attempted
+                        ? `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-500 font-medium">Skipped</span>`
+                        : (sccmInfo.removed
+                            ? `<span class="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800 font-bold">✓ Removed</span>`
+                            : (sccmInfo.found === false
+                                ? `<span class="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 font-medium">Not Found</span>`
+                                : `<span class="px-2 py-0.5 rounded text-xs bg-rose-100 text-rose-800 font-bold" title="${sccmInfo.message || 'Error'}">Failed</span>`));
+
+                    const adTag = !adInfo.attempted
+                        ? `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-500 font-medium">Skipped</span>`
+                        : (adInfo.removed
+                            ? `<span class="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800 font-bold">✓ Removed</span>`
+                            : (adInfo.found === false
+                                ? `<span class="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 font-medium">Not Found</span>`
+                                : `<span class="px-2 py-0.5 rounded text-xs bg-rose-100 text-rose-800 font-bold" title="${adInfo.message || 'Error'}">Failed</span>`));
+
+                    const iseTag = !removeIse
+                        ? `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-500 font-medium">Skipped</span>`
+                        : (iseRem.deleted || iseRem.status === 'SUCCESS'
+                            ? `<span class="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800 font-bold">✓ Purged</span>`
+                            : (iseRem.status === 'NOT_FOUND'
+                                ? `<span class="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 font-medium">Not Found</span>`
+                                : (d.resolved_mac ? `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-500 font-medium">No Endpoint</span>` : `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-400 font-medium">No MAC</span>`)));
+
+                    const overallTag = d.success
+                        ? `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1.5"></span><span class="text-xs text-emerald-700 font-semibold">Success</span>`
+                        : `<span class="w-2 h-2 rounded-full bg-rose-500 inline-block mr-1.5"></span><span class="text-xs text-rose-700 font-semibold">Issues</span>`;
+
+                    return `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
+                            <td class="py-2.5 px-3 font-mono font-medium text-slate-800 text-xs">${idx + 1}. ${d.device_name}</td>
+                            <td class="py-2.5 px-3 text-xs">${sccmTag}</td>
+                            <td class="py-2.5 px-3 text-xs">${adTag}</td>
+                            <td class="py-2.5 px-3 font-mono text-xs text-slate-600">${d.resolved_mac || '<span class="text-slate-400 italic">None</span>'}</td>
+                            <td class="py-2.5 px-3 text-xs">${iseTag}</td>
+                            <td class="py-2.5 px-3 text-xs flex items-center">${overallTag}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                targetRow.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-indigo-600 bg-slate-50 mt-4 animate-fade-in space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                                    Bulk Re-imaging Cleanup Complete (${total} Devices)
+                                </h3>
+                                <p class="text-xs text-slate-500">Workstation assets removed across SCCM SMS Provider, Active Directory, and Cisco ISE.</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="exportBulkResultsToCsv()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-medium py-1.5 px-3 rounded text-xs transition shadow-sm flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span>Export Results to CSV</span>
+                                </button>
+                                <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-semibold uppercase">Bulk Batch</span>
+                            </div>
+                        </div>
+
+                        <!-- Aggregate Summary Metric Cards -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 text-xs">
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm text-center">
+                                <div class="text-slate-400 font-bold uppercase text-[10px]">Total Devices</div>
+                                <div class="text-lg font-bold text-slate-800 mt-0.5">${total}</div>
+                            </div>
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm text-center">
+                                <div class="text-slate-400 font-bold uppercase text-[10px]">SCCM Removed</div>
+                                <div class="text-lg font-bold text-emerald-600 mt-0.5">${summary.sccm_removed ?? 0}</div>
+                            </div>
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm text-center">
+                                <div class="text-slate-400 font-bold uppercase text-[10px]">SCCM Not Found</div>
+                                <div class="text-lg font-bold text-amber-600 mt-0.5">${summary.sccm_not_found ?? 0}</div>
+                            </div>
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm text-center">
+                                <div class="text-slate-400 font-bold uppercase text-[10px]">AD Removed</div>
+                                <div class="text-lg font-bold text-emerald-600 mt-0.5">${summary.ad_removed ?? 0}</div>
+                            </div>
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm text-center">
+                                <div class="text-slate-400 font-bold uppercase text-[10px]">ISE Purged</div>
+                                <div class="text-lg font-bold text-indigo-600 mt-0.5">${summary.ise_purged ?? 0}</div>
+                            </div>
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm text-center">
+                                <div class="text-slate-400 font-bold uppercase text-[10px]">Failed</div>
+                                <div class="text-lg font-bold ${summary.failed > 0 ? 'text-rose-600' : 'text-slate-400'} mt-0.5">${summary.failed ?? 0}</div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Per-Device Results Table -->
+                        <div class="bg-white border border-slate-200 rounded-md shadow-sm overflow-hidden">
+                            <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-700 uppercase tracking-wide">Workstation Removal Details</span>
+                                <span class="text-xs text-slate-400">Audit logs recorded to central share</span>
+                            </div>
+                            <div class="max-h-96 overflow-y-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-100 text-[11px] font-bold text-slate-600 uppercase sticky top-0 shadow-sm">
+                                        <tr>
+                                            <th class="py-2 px-3">Device Name</th>
+                                            <th class="py-2 px-3">SCCM</th>
+                                            <th class="py-2 px-3">Active Directory</th>
+                                            <th class="py-2 px-3">Resolved MAC</th>
+                                            <th class="py-2 px-3">Cisco ISE</th>
+                                            <th class="py-2 px-3">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tableRows}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-slate-400">
+                            <span>Operator: <strong>${tech}</strong></span>
+                            <span>Processed at: <strong>${new Date().toLocaleTimeString()}</strong></span>
+                        </div>
+                    </div>`;
+            } else {
+                const sccm = data.sccm || {};
+                const ad = data.ad || {};
+                const iseRem = data.ise_removal || {};
+                const iseByp = data.ise_bypass || {};
+                const msgs = data.messages || [];
+
+                const getStatusBadge = (attempted, success, notFound, label) => {
+                    if (!attempted) return `<span class="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-500 border border-slate-200 font-medium">Skipped</span>`;
+                    if (success) return `<span class="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">✓ Success</span>`;
+                    if (notFound) return `<span class="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 border border-amber-300 font-medium">Not Found</span>`;
+                    return `<span class="px-2 py-0.5 rounded text-xs bg-rose-100 text-rose-800 border border-rose-300 font-bold">Failed</span>`;
+                };
+
+                const sccmHasError = sccm.error || (sccm.message && sccm.message.toLowerCase().includes('error'));
+                const adHasError = ad.error || (ad.message && ad.message.toLowerCase().includes('error'));
+
+                const sccmBadge = getStatusBadge(removeSccm, sccm.removed, sccm.found === false && !sccmHasError, "SCCM");
+                const adBadge = getStatusBadge(removeAd, ad.removed, ad.found === false && !adHasError, "AD");
+                const iseRemBadge = getStatusBadge(removeIse, iseRem.deleted, iseRem.status === 'NOT_FOUND', "ISE");
+                const iseBypBadge = getStatusBadge(stageIse, iseByp.status === 'SUCCESS', false, "Staging");
+
+                const messagesList = msgs.map(m => `<li class="flex items-start gap-1.5"><span class="text-indigo-500 font-bold">•</span> <span>${m}</span></li>`).join('');
+
+                targetRow.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-indigo-600 bg-slate-50 mt-4 animate-fade-in space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                                    Re-imaging Cleanup & Preparation Complete
+                                </h3>
+                                <p class="text-xs text-slate-500">Asset records and identities evaluated across network and directory infrastructure.</p>
+                            </div>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-semibold uppercase">Re-image Asset</span>
+                        </div>
+
+                        <!-- System Status Grid -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm">
+                                <div class="text-slate-500 font-semibold uppercase mb-1">SCCM Asset</div>
+                                <div class="flex items-center justify-between">
+                                    <span class="font-mono font-medium text-slate-800 truncate">${data.device_name || 'N/A'}</span>
+                                    ${sccmBadge}
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm">
+                                <div class="text-slate-500 font-semibold uppercase mb-1">Active Directory</div>
+                                <div class="flex items-center justify-between">
+                                    <span class="font-mono font-medium text-slate-800 truncate">${ad.device_name || data.device_name || 'N/A'}</span>
+                                    ${adBadge}
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm">
+                                <div class="text-slate-500 font-semibold uppercase mb-1">ISE Purge</div>
+                                <div class="flex items-center justify-between">
+                                    <span class="font-mono font-medium text-slate-800 truncate">${data.mac || 'No MAC'}</span>
+                                    ${iseRemBadge}
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-md bg-white border border-slate-200 shadow-sm">
+                                <div class="text-slate-500 font-semibold uppercase mb-1">ISE Bypass</div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-800 font-medium">${stageIse ? 'Staging Active' : 'Off (Office)'}</span>
+                                    ${iseBypBadge}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Execution Summary Log -->
+                        <div class="p-4 rounded-md bg-white border border-slate-200">
+                            <div class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-2">Execution Log Details</div>
+                            <ul class="text-xs text-slate-600 space-y-1">
+                                ${messagesList || '<li>All requested removal tasks processed.</li>'}
+                            </ul>
+                            <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                                <span>Operator: <strong>${tech}</strong></span>
+                                <span>Timestamp: <strong>${new Date().toLocaleTimeString()}</strong></span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+        } catch (err) {
+            targetRow.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700">
+                    <div class="font-bold mb-1">Communication Error</div>
+                    <div class="text-sm">Failed to connect to the Net Dashboard backend server. (${err.message || err})</div>
+                </div>`;
+        }
+    }
+
+    async function triggerIperfTest() {
+        const host = document.getElementById('iperfHostname').value.trim();
+        if (!host) return alert('Please enter a target computer name');
+
+        const targetRow = setActiveOutputRow('iperfOutput',
+            `<div class="bg-white p-8 rounded-lg shadow-md border border-slate-100 text-center text-emerald-600 animate-pulse font-medium">Running Ping and 10-Stream bidirectional iPerf sweep across 4 regions on ${host}...<br><span class="text-sm font-normal text-slate-500">(This will take roughly 60 - 80 seconds)</span></div>`
+        );
+
+        try {
+            const response = await fetchWithAuth('/api/v1/iperf-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hostname: host })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                targetRow.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700 font-bold">Error: ${data.detail || "Failed to execute bandwidth test."}</div>`;
+                return;
+            }
+
+            let rowsHtml = '';
+            if (Array.isArray(data.metrics) && data.metrics.length > 0) {
+                data.metrics.forEach(row => {
+                    let badgeClass = row.Status === 'Up' ? 'bg-emerald-400 text-white shadow-sm' : 'bg-red-400 text-white shadow-sm';
+                    let dlSpeed = row.DownloadThroughput || row.Throughput || 'N/A';
+                    let ulSpeed = row.UploadThroughput || 'N/A';
+
+                    rowsHtml += `
+						<tr class="hover:bg-slate-50 transition-colors">
+							<td class="py-4 px-2 text-slate-800 font-medium">${row.DataCenter}</td>
+							<td class="py-4 px-2"><span class="px-3 py-1 rounded-full text-xs font-bold ${badgeClass}">${row.Status}</span></td>
+							<td class="py-4 px-2 text-slate-600 font-medium">${row.AvgLatency}</td>
+							<td class="py-4 px-2 text-slate-700 font-semibold text-emerald-600">${dlSpeed}</td>
+							<td class="py-4 px-2 text-slate-700 font-semibold text-blue-600">${ulSpeed}</td>
+							<td class="py-4 px-2 text-slate-600 font-medium">${row.PacketLoss}</td>
+						</tr>`;
+                });
+            } else {
+                rowsHtml = `<tr><td colspan="6" class="py-4 text-center text-red-500 font-bold">Failed to parse regional data. Host may be offline.</td></tr>`;
+            }
+
+            targetRow.innerHTML = `
+				<div class="bg-white p-6 rounded-lg shadow-sm">
+					<h3 class="text-xl font-bold text-slate-700 mb-6 border-b pb-4">Regional Connectivity Status <span class="text-sm font-normal text-slate-400 ml-2">(Target: ${data.hostname})</span></h3>
+					<div class="overflow-x-auto">
+						<table class="w-full text-left border-collapse">
+							<thead>
+								<tr class="text-slate-500 text-sm border-b border-slate-200">
+									<th class="pb-3 font-semibold px-2">Data Center</th>
+									<th class="pb-3 font-semibold px-2">Status</th>
+									<th class="pb-3 font-semibold px-2">Avg Latency</th>
+									<th class="pb-3 font-semibold px-2 text-emerald-700">Download</th>
+									<th class="pb-3 font-semibold px-2 text-blue-700">Upload</th>
+									<th class="pb-3 font-semibold px-2">Packet Loss</th>
+								</tr>
+							</thead>
+							<tbody class="text-sm divide-y divide-slate-100">${rowsHtml}</tbody>
+						</table>
+					</div>
+				</div>`;
+        } catch (err) {
+            targetRow.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700 font-bold">Network communication failure with backend web service.</div>`;
+        }
+    }
+
+    async function triggerNetworkUtilities() {
+        const host = document.getElementById('netTestHost').value.trim();
+        const dest = document.getElementById('netTestDest').value.trim();
+        if (!host || !dest) return alert('Please enter both the source machine and target destination.');
+
+        const targetRow = setActiveOutputRow('networkOutput', `<div class="bg-white p-8 rounded-lg shadow-md border border-slate-100 text-center text-indigo-600 animate-pulse font-medium">Instructing ${host} to trace routing loops to ${dest}...</div>`);
+
+        try {
+            const response = await fetchWithAuth('/api/v1/network-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hostname: host, destination: dest })
+            });
+            const resData = await response.json();
+
+            if (!response.ok) {
+                targetRow.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700 font-bold">Error: ${resData.detail || "Failed to complete path diagnostics."}</div>`;
+                return;
+            }
+
+            const pingInfo = resData.data.Ping;
+            let badgeClass = pingInfo.Status === 'Reachable' ? 'bg-emerald-400' : 'bg-red-400';
+
+            targetRow.innerHTML = `
+				<div class="bg-white p-6 rounded-lg shadow-sm">
+					<h3 class="text-xl font-bold text-slate-700 mb-6 border-b pb-4">Path Analysis Report</h3>
+					<div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
+						<div class="bg-slate-50 p-3 rounded border border-slate-100"><p class="text-xs text-slate-400 uppercase tracking-wide font-semibold">Status</p><span class="inline-block px-3 py-0.5 mt-1 rounded-full text-xs font-bold text-white ${badgeClass}">${pingInfo.Status}</span></div>
+						<div class="bg-slate-50 p-3 rounded border border-slate-100"><p class="text-xs text-slate-400 uppercase tracking-wide font-semibold">Node</p><p class="font-semibold text-slate-800 mt-0.5 truncate">${pingInfo.Destination}</p></div>
+						<div class="bg-slate-50 p-3 rounded border border-slate-100"><p class="text-xs text-slate-400 uppercase tracking-wide font-semibold">Latency</p><p class="font-bold text-slate-800 mt-0.5">${pingInfo.AvgLatency}</p></div>
+						<div class="bg-slate-50 p-3 rounded border border-slate-100"><p class="text-xs text-slate-400 uppercase tracking-wide font-semibold">Loss</p><p class="font-bold text-slate-800 mt-0.5">${pingInfo.PacketLoss}</p></div>
+					</div>
+				</div>`;
+        } catch (err) {
+            targetRow.innerHTML = `<div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-500 bg-red-50 text-red-700 font-bold">Network communication failure with backend web service.</div>`;
+        }
+    }
+
+    // --- Global Routing State for Step-Up Auth ---
+    let pendingStepUpAction = null;
+
+    // --- Modal Configuration Handlers ---
+    function openStepUpModal(actionType) {
+        pendingStepUpAction = actionType;
+        const modal = document.getElementById('stepUpModal');
+        modal.classList.remove('hidden');
+
+        const titleEl = document.getElementById('stepUpModalTitle');
+        const subtitleEl = document.getElementById('stepUpModalSubtitle');
+        const descEl = document.getElementById('stepUpModalDesc');
+        const submitBtn = document.getElementById('stepUpModalSubmitBtn');
+
+        const defaultUser = localStorage.getItem("user_email") || localStorage.getItem("user_name") || "";
+
+        if (actionType === 'reimage') {
+            if (titleEl) titleEl.innerText = "Secondary Authentication Required";
+            if (subtitleEl) subtitleEl.innerText = "Re-imaging & Multi-Application Purge Authorization";
+            if (descEl) descEl.innerText = "This operation permanently deletes device records from Microsoft SCCM, Active Directory, and Cisco ISE. Enter your corporate directory credentials to authorize. Membership in the re-imaging group is strictly enforced.";
+            if (submitBtn) submitBtn.innerText = "Authorize & Execute Re-image";
+
+            const techInput = document.getElementById('operatorId');
+            const techVal = techInput ? techInput.value.trim() : '';
+            document.getElementById('modalLdapUser').value = techVal || defaultUser;
+        } else if (actionType === 'ztp') {
+            if (titleEl) titleEl.innerText = "Step-Up Authentication Required";
+            if (subtitleEl) subtitleEl.innerText = "ZTP Hardware Provisioning Authorization";
+            if (descEl) descEl.innerText = "Provisioning network hardware alters production Meraki templates and switch ports. Enter your corporate directory password to authenticate.";
+            if (submitBtn) submitBtn.innerText = "Authorize & Provision";
+            document.getElementById('modalLdapUser').value = defaultUser;
+        } else if (actionType === 'applianceSwap') {
+            if (titleEl) titleEl.innerText = "Step-Up Authentication Required";
+            if (subtitleEl) subtitleEl.innerText = "Meraki Appliance Swap Authorization";
+            if (descEl) descEl.innerText = "Replacing a Meraki appliance changes production network hardware. Enter your corporate directory credentials to authenticate and authorize this swap.";
+            if (submitBtn) submitBtn.innerText = "Authorize & Execute Swap";
+            document.getElementById('modalLdapUser').value = defaultUser;
+        } else if (actionType === 'telecom') {
+            if (titleEl) titleEl.innerText = "Step-Up Authentication Required";
+            if (subtitleEl) subtitleEl.innerText = "CUCM & Webex Calling Live Authorization";
+            if (descEl) descEl.innerText = "Provisioning Webex Calling locations, activating external DIDs, onboarding live devices, or modifying CUCM dial-plans requires corporate directory authentication. Enter your directory credentials to authorize.";
+            if (submitBtn) submitBtn.innerText = "Authorize & Execute";
+            document.getElementById('modalLdapUser').value = defaultUser;
+        } else {
+            if (titleEl) titleEl.innerText = "Step-Up Authentication Required";
+            if (subtitleEl) subtitleEl.innerText = "Elevated Live Deployment Validation";
+            if (descEl) descEl.innerText = "Deploying a Live Sync alters production network group infrastructure configurations. Enter your corporate directory password to authenticate.";
+            if (submitBtn) submitBtn.innerText = "Authorize & Deploy";
+            document.getElementById('modalLdapUser').value = defaultUser;
+        }
+
+        document.getElementById('modalLdapPass').value = '';
+        document.getElementById('modalLdapPass').focus();
+    }
+
+    function closeStepUpModal() {
+        document.getElementById('stepUpModal').classList.add('hidden');
+        document.getElementById('modalLdapPass').value = '';
+        if (typeof clearPendingTelecomStepUpAction === 'function') {
+            clearPendingTelecomStepUpAction();
+        }
+        pendingStepUpAction = null;
+    }
+
+    function submitSyncWithAuth(event) {
+        if (event) event.preventDefault(); // Prevent implicit form submission reloads
+
+        const stepUpUser = document.getElementById('modalLdapUser').value.trim();
+        const stepUpPass = document.getElementById('modalLdapPass').value;
+
+        if (!stepUpUser || !stepUpPass) {
+            return alert("Please enter your directory credentials to authorize this operation.");
+        }
+
+        const actionToExecute = pendingStepUpAction;
+        const telecomAction = actionToExecute === 'telecom'
+            ? takePendingTelecomStepUpAction()
+            : null;
+        closeStepUpModal();
+
+        if (actionToExecute === 'telecom') {
+            if (typeof telecomAction !== 'function') {
+                return alert("The pending live action is no longer available. Start it again.");
+            }
+            telecomAction(stepUpUser, stepUpPass);
+        } else if (actionToExecute === 'ztp') {
+            executeZtpPipeline(stepUpUser, stepUpPass);
+        } else if (actionToExecute === 'reimage') {
+            executeBypassRequest('reimage', stepUpUser, stepUpPass);
+        } else if (actionToExecute === 'applianceSwap') {
+            executeApplianceSwap(stepUpUser, stepUpPass);
+        } else {
+            executeNdgPipeline('sync', stepUpUser, stepUpPass);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const modalPass = document.getElementById('modalLdapPass');
+        if (modalPass) {
+            modalPass.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitSyncWithAuth(e);
+                }
+            });
+        }
+    });
+
+    // --- ZTP Engine ---
+    function triggerZtpProvision(event) {
+        if (event) event.preventDefault();
+
+        const serial = document.getElementById('ztpSerial').value.trim();
+        const name = document.getElementById('ztpNetworkName').value.trim();
+        const template = document.getElementById('ztpTemplateId').value;
+        const address = document.getElementById('ztpPhysicalAddress').value.trim();
+
+        if (!serial || !name || !template || !address) {
+            return alert("Please fill out the Serial Number, Network Name, Template, and Physical Address.");
+        }
+
+        const userRole = localStorage.getItem("user_role");
+        if (userRole !== "NetworkAdmin") {
+            return alert("Access Denied: Only Network Engineers can execute hardware provisioning.");
+        }
+
+        openStepUpModal('ztp');
+    }
+
+    // --- ZTP Step Tracker Engine ---
+    function updateZtpTracker(pct, isFailed = false) {
+        const steps = [
+            { id: 'ztp-step-1', activeAt: 10, completeAt: 40 },
+            { id: 'ztp-step-2', activeAt: 40, completeAt: 60 },
+            { id: 'ztp-step-3', activeAt: 60, completeAt: 75 },
+            { id: 'ztp-step-4', activeAt: 75, completeAt: 90 },
+            { id: 'ztp-step-5', activeAt: 90, completeAt: 100 }
+        ];
+
+        steps.forEach((step, index) => {
+            const el = document.getElementById(step.id);
+            if (!el) return;
+            const label = el.getAttribute('data-label');
+
+            if (pct >= step.completeAt) {
+                el.className = "flex items-center gap-3 text-emerald-600 transition-colors font-semibold";
+                el.innerHTML = `<svg class="w-5 h-5 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> <span>${label}</span>`;
+            } else if (pct >= step.activeAt && pct < step.completeAt) {
+                if (isFailed) {
+                    el.className = "flex items-center gap-3 text-rose-600 transition-colors font-bold";
+                    el.innerHTML = `<svg class="w-5 h-5 text-rose-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg> <span>${label} (Failed)</span>`;
+                } else {
+                    el.className = "flex items-center gap-3 text-indigo-700 transition-colors font-bold";
+                    el.innerHTML = `<div class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center bg-indigo-100 border-2 border-indigo-600 text-xs font-bold animate-pulse">${index + 1}</div> <span>${label}...</span>`;
+                }
+            } else {
+                el.className = "flex items-center gap-3 text-slate-400 transition-colors";
+                el.innerHTML = `<div class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center border-2 border-current text-xs font-bold">${index + 1}</div> <span>${label}</span>`;
+            }
+        });
+    }
+
+    async function executeZtpPipeline(stepUpUser, stepUpPass) {
+        const serial = document.getElementById('ztpSerial').value.trim();
+        const name = document.getElementById('ztpNetworkName').value.trim();
+        const template = document.getElementById('ztpTemplateId').value;
+        const address = document.getElementById('ztpPhysicalAddress').value.trim();
+
+        const statusBox = document.getElementById('ztpStatusBox');
+        const statusText = document.getElementById('ztpStatusText');
+        const spinner = document.getElementById('ztpSpinner');
+        const progressContainer = document.getElementById('ztpProgressContainer');
+        const progressBar = document.getElementById('ztpProgressBar');
+
+        if (!serial || !name || !template || !address) {
+            return alert("Please fill out the Serial Number, Network Name, Template, and Physical Address.");
+        }
+
+        statusBox.className = 'mb-6 p-6 rounded-lg text-sm border shadow-inner flex flex-col gap-5 bg-indigo-50 text-indigo-900 border-indigo-200';
+        statusBox.classList.remove('hidden');
+        if (spinner) spinner.classList.remove('hidden');
+        if (progressContainer) progressContainer.classList.remove('hidden');
+        if (progressBar) progressBar.style.width = '0%';
+
+        statusText.innerText = "Authorizing pipeline request with directory credentials...";
+        updateZtpTracker(0);
+
+        try {
+            const response = await fetchWithAuth('/api/v1/admin/ztp-provision', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    serial_number: serial,
+                    network_name: name,
+                    template_id: template,
+                    gateway_type: document.getElementById('ztpGatewayType').value,
+                    gateway_designation: document.getElementById('ztpGatewayDesignation').value,
+                    deployment_stage: document.getElementById('ztpDeploymentStage').value,
+                    physical_address: address,
+                    step_up_user: stepUpUser,
+                    step_up_pass: stepUpPass
+                })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (spinner) spinner.classList.add('hidden');
+                if (progressContainer) progressContainer.classList.add('hidden');
+                statusBox.className = 'mb-6 p-4 rounded-md text-sm flex flex-col gap-2 bg-red-50 text-red-800 border border-red-200';
+                statusText.innerText = `Execution Failure: ${data.detail || 'Operation blocked.'}`;
+                return;
+            }
+
+            if (data.task_id) {
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const statusRes = await fetchWithAuth(`/api/v1/admin/ise-ndg-audit/status/${data.task_id}`);
+                        const statusData = await statusRes.json();
+
+                        if (progressBar) progressBar.style.width = `${statusData.progress}%`;
+                        statusText.innerText = statusData.message;
+
+                        const isFailed = statusData.status === "FAILED";
+                        updateZtpTracker(statusData.progress, isFailed);
+
+                        if (statusData.status === "COMPLETED" || statusData.status === "FAILED") {
+                            clearInterval(pollInterval);
+                            if (spinner) spinner.classList.add('hidden');
+                            if (progressContainer) setTimeout(() => progressContainer.classList.add('hidden'), 2000);
+
+                            if (isFailed) {
+                                statusBox.className = 'mb-6 p-6 rounded-lg text-sm border shadow-inner flex flex-col gap-4 bg-red-50 text-red-900 border-red-200';
+                            } else {
+                                statusBox.className = 'mb-6 p-6 rounded-lg text-sm border shadow-inner flex flex-col gap-4 bg-green-50 text-green-900 border-green-200';
+                            }
+                        }
+                    } catch (pollErr) {
+                        console.error("ZTP Tracking loop error:", pollErr);
+                    }
+                }, 3000);
+            }
+        } catch (err) {
+            if (spinner) spinner.classList.add('hidden');
+            if (progressContainer) progressContainer.classList.add('hidden');
+            statusBox.className = 'mb-6 p-4 rounded-md text-sm flex flex-col gap-2 bg-red-50 text-red-800 border border-red-200';
+            statusText.innerText = err.message || "Communication failure routing payload.";
+        }
+    }
+
+    function setApplianceSwapAccess(allowed) {
+        canUseApplianceSwap = allowed;
+        const navButton = document.getElementById('btn-nav-meraki-swap');
+        const swapView = document.getElementById('view-swap');
+        if (navButton) navButton.classList.toggle('hidden', !allowed);
+        if (swapView) swapView.classList.toggle('hidden', !allowed);
+    }
+
+	// Validate a swap before requesting fresh directory credentials.
+	function triggerApplianceSwap() {
+		const networkId = document.getElementById('swapNetworkId').value;
+		const oldSerial = document.getElementById('swapOldSerial').value.trim();
+		const newSerial = document.getElementById('swapNewSerial').value.trim();
+
+		if (!networkId || !oldSerial || !newSerial) {
+			return alert("Please select a Network and manually enter both the Old and New Serial Numbers.");
+		}
+
+		if (oldSerial.toUpperCase() === newSerial.toUpperCase()) {
+			return alert("Old Serial Number and New Serial Number cannot be the same.");
+		}
+
+		if (!confirm(`Are you sure you want to replace device ${oldSerial} with ${newSerial}?`)) {
+			return;
+		}
+
+        openStepUpModal('applianceSwap');
+    }
+
+    async function previewMerakiWebexLocations() {
+        const button = document.getElementById('btnExportMerakiLocations');
+        const status = document.getElementById('merakiLocationExportStatus');
+        const modal = document.getElementById('merakiLocationPreviewModal');
+        button.disabled = true;
+        status.innerText = 'Collecting Meraki appliance addresses for preview...';
+        status.classList.remove('text-red-400', 'text-emerald-400');
+        status.classList.add('text-slate-500');
+        try {
+            const response = await fetchWithAuth('/api/v1/admin/meraki-webex-location-preview');
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Could not preview Meraki location data.');
+            }
+            merakiWebexLocationPreview = await response.json();
+            renderMerakiWebexLocationPreview();
+            modal.classList.remove('hidden');
+            status.innerText = 'Review the source addresses and parsed Webex fields.';
+        } catch (error) {
+            status.innerText = error.message;
+            status.classList.remove('text-slate-500');
+            status.classList.add('text-red-400');
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    function renderMerakiWebexLocationPreview() {
+        const summary = document.getElementById('merakiLocationPreviewSummary');
+        const body = document.getElementById('merakiLocationPreviewRows');
+        const downloadButton = document.getElementById('btnDownloadMerakiLocations');
+        const rows = merakiWebexLocationPreview?.rows || [];
+        const applianceCount = merakiWebexLocationPreview?.appliance_count || rows.length;
+        const incompleteCount = rows.filter(
+            row => row.lookup_error || row.missing_fields.length || row.address_conflict
+        ).length;
+        const lookupFailureCount = rows.filter(row => row.lookup_error).length;
+
+        summary.innerText = rows.length
+            ? `${applianceCount} MX/Z4 appliances across ${rows.length} locations. ${incompleteCount} locations need review; ${lookupFailureCount} had address lookup failures.`
+            : 'No MX or Z4 appliance networks were found.';
+        summary.className = incompleteCount
+            ? 'px-5 py-3 text-sm text-amber-300'
+            : 'px-5 py-3 text-sm text-emerald-300';
+        body.replaceChildren();
+
+        for (const row of rows) {
+            const values = row.values || {};
+            const tableRow = document.createElement('tr');
+            tableRow.className = row.lookup_error || row.missing_fields.length || row.address_conflict
+                ? 'bg-amber-950/20'
+                : 'hover:bg-slate-800/60';
+            const cellValues = [
+                `${values['Location Name'] || ''}\n${row.device_count || 1} appliance(s): ${row.appliance_models || ''} ${row.serial_numbers || ''}`.trim(),
+                row.source_address || (row.lookup_error ? 'Address lookup failed' : 'No Meraki address configured'),
+                row.address_source === 'device' ? 'Device (ZT Provisioning)' : row.address_source === 'network' ? 'Network' : 'Unavailable',
+                values['Address Line 1'],
+                values.City,
+                values.State,
+                values.ZIP,
+                values.Country,
+                values['Time Zone'],
+            ];
+
+            for (const value of cellValues) {
+                const cell = document.createElement('td');
+                cell.className = 'p-3 align-top whitespace-pre-line';
+                cell.textContent = value || '';
+                tableRow.appendChild(cell);
+            }
+
+            const statusCell = document.createElement('td');
+            statusCell.className = 'p-3 align-top';
+            statusCell.classList.add(row.lookup_error || row.missing_fields.length || row.address_conflict ? 'text-amber-300' : 'text-emerald-300');
+            statusCell.textContent = row.lookup_error
+                ? 'LOOKUP FAILED'
+                : row.address_conflict
+                    ? 'ADDRESS CONFLICT'
+                : row.missing_fields.length
+                    ? `INCOMPLETE: ${row.missing_fields.join(', ')}`
+                    : 'READY';
+            statusCell.title = row.lookup_error || '';
+            tableRow.appendChild(statusCell);
+            body.appendChild(tableRow);
+        }
+
+        downloadButton.disabled = rows.length === 0;
+    }
+
+    function closeMerakiLocationPreview() {
+        document.getElementById('merakiLocationPreviewModal').classList.add('hidden');
+    }
+
+    function downloadMerakiWebexLocations() {
+        if (!merakiWebexLocationPreview?.rows?.length) return;
+        const incompleteCount = merakiWebexLocationPreview.rows.filter(
+            row => row.lookup_error || row.missing_fields.length
+        ).length;
+        if (incompleteCount && !confirm(
+            `${incompleteCount} rows have missing location data or lookup failures. Download the CSV anyway?`
+        )) return;
+
+        const columns = merakiWebexLocationPreview.columns;
+        const csvRows = [
+            columns,
+            ...merakiWebexLocationPreview.rows.map(row => columns.map(column => row.values[column] || '')),
+        ];
+        const csvText = csvRows
+            .map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(','))
+            .join('\r\n');
+        const blob = new Blob([`\ufeff${csvText}`], { type: 'text/csv;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'meraki_webex_locations_import.csv';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+        closeMerakiLocationPreview();
+
+        const status = document.getElementById('merakiLocationExportStatus');
+        status.innerText = 'Webex locations CSV downloaded.';
+        status.classList.remove('text-slate-500', 'text-red-400');
+        status.classList.add('text-emerald-400');
+    }
+
+    async function executeApplianceSwap(stepUpUser, stepUpPass) {
+        const networkId = document.getElementById('swapNetworkId').value;
+        const oldSerial = document.getElementById('swapOldSerial').value.trim();
+        const newSerial = document.getElementById('swapNewSerial').value.trim();
+		const statusBox = document.getElementById('swapStatusBox');
+		const statusText = document.getElementById('swapStatusText');
+		const progressBar = document.getElementById('swapProgressBar');
+		const progressContainer = document.getElementById('swapProgressContainer');
+
+		statusBox.classList.remove('hidden');
+		progressContainer.classList.remove('hidden');
+		progressBar.style.width = '0%';
+		statusText.innerText = "Authorizing hardware replacement request...";
+
+		try {
+			const response = await fetchWithAuth('/api/v1/admin/meraki-swap-appliance', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					network_id: networkId,
+					old_serial: oldSerial,
+					new_serial: newSerial,
+                    step_up_user: stepUpUser,
+                    step_up_pass: stepUpPass
+				})
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				statusBox.className = 'mb-6 p-4 rounded-lg text-sm border bg-red-50 text-red-900 border-red-200';
+				statusText.innerText = `Swap Failed: ${data.detail || 'Operation blocked.'}`;
+				return;
+			}
+
+			if (data.task_id) {
+				const pollInterval = setInterval(async () => {
+					const statusRes = await fetchWithAuth(`/api/v1/admin/ise-ndg-audit/status/${data.task_id}`);
+					const statusData = await statusRes.json();
+
+					progressBar.style.width = `${statusData.progress}%`;
+					statusText.innerText = statusData.message;
+
+					if (statusData.status === "COMPLETED" || statusData.status === "FAILED") {
+						clearInterval(pollInterval);
+						if (statusData.status === "FAILED") {
+							statusBox.className = 'mb-6 p-4 rounded-lg text-sm border bg-red-50 text-red-900 border-red-200';
+						} else {
+							statusBox.className = 'mb-6 p-4 rounded-lg text-sm border bg-green-50 text-green-900 border-green-200';
+						}
+					}
+				}, 2500);
+			}
+		} catch (err) {
+			statusBox.className = 'mb-6 p-4 rounded-lg text-sm border bg-red-50 text-red-900 border-red-200';
+			statusText.innerText = `Communication Error: ${err.message}`;
+		}
+    }
+
+    function showLocalDashboard() {
+        console.log("[NetDashboard] Local development workspace initialized.");
+
+        // Hide login/auth overlays if present
+        const authOverlay = document.getElementById("authOverlay");
+        if (authOverlay) {
+            authOverlay.style.display = "none";
+        }
+
+        // Update user session status indicator
+        const userStatusElem = document.getElementById("userStatusLabel");
+        if (userStatusElem) {
+            userStatusElem.textContent = "Dev Mode (ISE_NET_ADMIN)";
+        }
+
+        // Set view based on Jinja2 context or hash
+        const activeTab = "{{ active_tab | default('') }}";
+        if (activeTab === 'telecom_migration' || activeTab === 'telecom_control') {
+            const btn = document.getElementById('btn-nav-telecom-control');
+            switchView('view-telecom-control', 'Webex Calling Migration Control Center', btn);
+        } else if (activeTab === 'telecom_workspaces') {
+            const btn = document.getElementById('btn-nav-telecom-workspaces');
+            switchView('view-telecom-workspaces', 'Webex Calling Workspace & Device Importer', btn);
+        } else if (activeTab === 'telecom_uccx') {
+            const btn = document.getElementById('btn-nav-telecom-uccx');
+            switchView('view-telecom-uccx', 'UCCX Application to WxCC Flow Studio', btn);
+        } else if (typeof loadView === "function") {
+            const currentHash = window.location.hash.replace("#", "") || "identity-tracker";
+            loadView(currentHash);
+        }
+    }
+    window.showLocalDashboard = showLocalDashboard;
+    </script>
+
+    <!-- DEV Active Directory Login Modal -->
+    <div id="devLoginModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-cyan-950/80 border border-cyan-800 rounded-lg">
+                    <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white">Sonic Healthcare Active Directory</h3>
+                    <p class="text-xs text-slate-400">DEV Server Operator Authentication (LDAPS)</p>
+                </div>
+            </div>
+            <div id="devLoginNotice" class="hidden mb-3 p-2.5 bg-amber-950/80 border border-amber-500/50 rounded-lg text-amber-200 text-xs"></div>
+            <div id="devLoginError" class="hidden mb-3 p-2.5 bg-red-950/80 border border-red-500/50 rounded-lg text-red-200 text-xs"></div>
+            <form id="devLoginForm" onsubmit="handleDevLoginSubmit(event)" class="space-y-3 mt-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Active Directory Username</label>
+                    <input type="text" id="devLoginUser" placeholder="e.g. sitcdoadm or your AD account" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:border-cyan-500 focus:outline-none" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Active Directory Password</label>
+                    <input type="password" id="devLoginPass" placeholder="••••••••••••" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white text-sm focus:border-cyan-500 focus:outline-none" />
+                </div>
+                <button type="submit" id="devLoginBtn" class="w-full mt-3 py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg text-sm transition shadow-lg">Authenticate via LDAPS</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

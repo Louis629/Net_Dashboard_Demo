@@ -1,0 +1,75 @@
+# =============================================================================
+# Visual Studio / IDE Workspace Cache (Causes File-Lock Failures)
+# =============================================================================
+.vs/
+*.vsidx
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =============================================================================
+# Python Virtual Environments & Caches
+# =============================================================================
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# =============================================================================
+# Local Environment & Secrets Configuration
+# =============================================================================
+.env
+.env.*
+.env.local
+!.env.example
+
+# =============================================================================
+# Local Reports, Scratchpad & Temporary Downloads
+# =============================================================================
+scratch/
+reports/
+temp_downloads/
+temp_test_export/
+exports/
+logs/
+*.log
+*.log.*
+*.old
+*.zip
+
+# =============================================================================
+# Audio / Media Repositories (Binary WAV files)
+# =============================================================================
+media/
+*.wav
+*.mp3
+
+# =============================================================================
+# Database & Test Coverage
+# =============================================================================
+*.sqlite
+*.sqlite3
+celery_backend.sqlite
+.coverage
+htmlcov/
+
+# =============================================================================
+# Migration CSVs, UCCX Scripts & Extra Local DBs
+# =============================================================================
+imports/*.csv
+imports/migration_csv/*.csv
+!imports/migration_csv/templates/**
+imports/uccx_scripts/*.aef
+*.aef
+*.db
+
+# =============================================================================
+# Track only shared VS Code Python workspace settings
+# =============================================================================
+.vscode/*
+!.vscode/settings.json
